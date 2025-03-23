@@ -11,4 +11,8 @@
     {% if message %}
         <div>{{ message }}</div>
     {% endif %}
+
+    <div>
+        <a href="{% url 'users:create' %}">Create an Account</a>
+    </div>
 {% endblock %}
