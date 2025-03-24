@@ -16,6 +16,9 @@
     {% endif %}
 
     <div>
+        <a href="{% url 'users:reset_password' %}">Forgot Password</a>
+    </div>
+    <div>
         <a href="{% url 'users:create' %}">Create an Account</a>
     </div>
 {% endblock %}
