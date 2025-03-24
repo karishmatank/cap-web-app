@@ -8,5 +8,8 @@
     </ul>
 
     <a href="{% url 'users:change_password' %}">Change Password</a>
-    <a href="{% url 'users:logout' %}">Log Out</a>
+    <form action="{% url 'users:logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Log out</button>
+    </form>
 {% endblock %}

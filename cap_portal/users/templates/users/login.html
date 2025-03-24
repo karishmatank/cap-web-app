@@ -3,13 +3,16 @@
 {% block body %}
     <form action="{% url 'users:login' %}" method="post">
         {% csrf_token %}
-        <input autocomplete="off" autofocus type="text" name="username" placeholder="Username">
-        <input autocomplete="off" type="password", name="password" placeholder="Password">
+        {{ form }}
         <input type="submit" value="Login">
     </form>
 
     {% if message %}
         <div>{{ message }}</div>
+    {% endif %}
+
+    {% if form.errors %}
+        <div>Your username and password didn't match. Please try again.</div>
     {% endif %}
 
     <div>

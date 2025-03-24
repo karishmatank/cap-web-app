@@ -6,7 +6,10 @@ from . import views
 app_name = "users"
 urlpatterns = [
     path("", views.index, name="index"),
-    path("login", views.login_view, name="login"),
+    path("login", auth_views.LoginView.as_view(
+        template_name="users/login.html",
+        next_page=reverse_lazy("users:index")
+    ), name="login"),
     path("logout", views.logout_view, name="logout"),
     path("create", views.create_user, name="create"),
     path("change-password", auth_views.PasswordChangeView.as_view(

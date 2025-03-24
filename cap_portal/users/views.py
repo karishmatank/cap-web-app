@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth.views import logout_then_login
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -49,31 +50,6 @@ def index(request):
     
     return render(request, "users/user.html")
 
-def login_view(request):
-    if request.method == "POST":
-        # Get information the user submitted through the login page
-        username = request.POST["username"]
-        password = request.POST["password"]
-
-        # Check if the username and password are valid
-        user = authenticate(request, username=username, password=password)
-
-        # If user exists, log them in and redirect to index page
-        if user:
-            login(request, user)
-            return HttpResponseRedirect(reverse("users:index"))
-        
-        # Else, display an error message
-        else:
-            return render(request, "users/login.html", {
-                "message": "Invalid credentials"
-            })
-
-    return render(request, "users/login.html")
-
 @login_required
 def logout_view(request):
-    logout(request)
-    return render(request, "users/login.html", {
-        "message": "Logged Out"
-    })
+    return logout_then_login(request)
