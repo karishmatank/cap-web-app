@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -40,10 +41,11 @@ def create_user(request):
 
     return render(request, "users/create_user.html")
 
+@login_required
 def index(request):
-    # If the user isn't signed in, redirect to the login page
-    if not request.user.is_authenticated:
-        return HttpResponseRedirect(reverse("users:login"))
+    # # If the user isn't signed in, redirect to the login page
+    # if not request.user.is_authenticated:
+    #     return HttpResponseRedirect(reverse("users:login"))
     
     return render(request, "users/user.html")
 
@@ -69,6 +71,7 @@ def login_view(request):
 
     return render(request, "users/login.html")
 
+@login_required
 def logout_view(request):
     logout(request)
     return render(request, "users/login.html", {
