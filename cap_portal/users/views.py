@@ -15,13 +15,6 @@ def create_user(request):
             return render(request, "users/create_user.html", {
                 "message": f"Account already exists for email address {request.POST["email"]}."
             })
-
-        # Check if username is already in use
-        username_exists = User.objects.filter(username=request.POST["username"]).exists()
-        if username_exists:
-            return render(request, "users/create_user.html", {
-                "message": f"Username {request.POST["username"]} is already in use."
-            })
         
         # Check if both password entries match
         if request.POST["password"] != request.POST["password_reentry"]:
@@ -31,9 +24,11 @@ def create_user(request):
         
         # If everything looks good, create a new user
         new_user = User.objects.create_user(
-            request.POST["username"],
-            request.POST["email"],
-            request.POST["password"]
+            username=request.POST["email"],  # Just using email as username
+            email=request.POST["email"],
+            password=request.POST["password"],
+            first_name=request.POST["first_name"],
+            last_name=request.POST["last_name"]
         )
 
         return render(request, "users/login.html", {

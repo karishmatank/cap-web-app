@@ -3,7 +3,16 @@
 {% block body %}
     <form action="{% url 'users:login' %}" method="post">
         {% csrf_token %}
-        {{ form }}
+        <table>
+            <tr>
+                <td>Email:</td>
+                <td>{{ form.username }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.password.label_tag }}</td>
+                <td>{{ form.password }}</td>
+            </tr>
+        </table>
         <input type="hidden" name="next" value="{{ next }}">
         <input type="submit" value="Login">
     </form>
