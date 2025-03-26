@@ -13,7 +13,6 @@ urlpatterns = [
     # Authentication views
     path("login/", auth_views.LoginView.as_view(
         template_name="users/login.html",
-        next_page=reverse_lazy("users:index")
     ), name="login"),
 
     path("logout/", views.logout_view, name="logout"),

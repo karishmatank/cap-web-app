@@ -131,6 +131,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # For login decorator
 LOGIN_URL = "users:login"
 
+# If a user goes to users/login/ directly, I'll redirect to the users:index page (no next parameter in URL)
+# Otherwise, the login_required decorator will redirect them to where they were coming from
+LOGIN_REDIRECT_URL = 'users:index'
+
 # Email backend for sending password reset emails
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
