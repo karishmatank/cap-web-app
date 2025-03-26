@@ -1,7 +1,9 @@
-# From https://channels.readthedocs.io/en/latest/tutorial/part_3.html
+# Adapted from https://channels.readthedocs.io/en/latest/tutorial/part_3.html
 
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from .models import Message
+from asgiref.sync import sync_to_async
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -27,13 +29,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name, self.channel_name
         )
 
-    # Receive message from WebSocket
+    # Receive message from WebSocket 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
         first_name = self.scope["user"].first_name
         last_name = self.scope["user"].last_name
 
+        # Save to DB
+        await sync_to_async(Message.objects.create)(
+            user=self.scope["user"],
+            room_name=self.room_name,
+            text=message
+        )
+
+        # Broadcast to the group
         await self.channel_layer.group_send(
             self.room_group_name, 
             {

@@ -1,17 +1,53 @@
-<!-- From Django Channels tutorial: https://channels.readthedocs.io/en/latest/tutorial/part_2.html -->
+<!-- Adapted from Django Channels tutorial: https://channels.readthedocs.io/en/latest/tutorial/part_2.html -->
+
+{% load static %}
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8"/>
     <title>Chat Room</title>
+    <link rel="stylesheet" href="{% static 'chat/styles.css' %}">
 </head>
 <body>
-    <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+    <div id="chat-log">
+        {% spaceless %}
+        {% regroup messages by timestamp.date as date_groups %}
+        {% for group in date_groups %}
+            <div class="day-header">
+                ─── {{ group.grouper|date:"F j, Y" }} ───
+            </div>
+        
+            {% for message in group.list %}
+            <div class="message">
+                <span class="timestamp">{{ message.timestamp|date:"g:i A" }} </span> <!--Intentional space before ending tag-->
+                <span class="content"><strong>{{ message.user.first_name }} {{ message.user.last_name }}</strong>: {{ message.text }}</span>
+            </div>
+            {% endfor %}
+        {% endfor %}
+        {% endspaceless %}
+    </div>
+    <br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
     {{ room_name|json_script:"room-name" }}
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Scroll to the bottom of the chat window
+            const chatLog = document.querySelector("#chat-log");
+            if (chatLog) {
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+
+            // I'm running into an issue where there is a newline being inserted in after the server-render chat history
+            // So I'm going to remove it manually
+            // If the last node is a text node (usually a stray newline), remove it
+            while (chatLog.lastChild && chatLog.lastChild.nodeType === Node.TEXT_NODE) {
+                chatLog.removeChild(chatLog.lastChild);
+            }
+        });
+
+        // Chat related
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
         const chatSocket = new WebSocket(
@@ -24,9 +60,28 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (
-                data.first_name + " " + data.last_name + ": " + data.message + '\n'
-            );
+            const chatLog = document.querySelector("#chat-log");
+
+            // Create a new message to add to the history. Add a message class
+            const newMessage = document.createElement("div");
+            newMessage.classList.add('message');
+
+            // Format timestamp of new message
+            const newTimestamp = new Date().toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
+
+            // Populate new message
+            newMessage.innerHTML = `<span class="timestamp">${newTimestamp}</span> <span class="content"><strong>${data.first_name} ${data.last_name}</strong>: ${data.message}</span>`;
+            
+            // Add to existing chat log
+            chatLog.appendChild(newMessage);
+
+            // Scroll to bottom after new message is added
+            // Let layout settle before scrolling
+            setTimeout(() => {
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }, 10);
+
+            
         };
 
         chatSocket.onclose = function(e) {
