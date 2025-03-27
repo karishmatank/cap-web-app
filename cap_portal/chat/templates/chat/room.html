@@ -30,7 +30,7 @@
     <br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
-    {{ room_name|json_script:"room-name" }}
+    {{ room_id|json_script:"room-id" }}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             // Scroll to the bottom of the chat window
@@ -48,13 +48,13 @@
         });
 
         // Chat related
-        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        const roomId = JSON.parse(document.getElementById('room-id').textContent);
 
         const chatSocket = new WebSocket(
             'ws://'
             + window.location.host
             + '/ws/chat/'
-            + roomName
+            + roomId
             + '/'
         );
 

@@ -1,0 +1,28 @@
+{% extends "chat/layout.html" %}
+
+{% block title %}
+    New Chat
+{% endblock %}
+
+{% block body %}
+    <form action="{% url 'chat:new' %}" method="post">
+        {% csrf_token %}
+        <input autocomplete="off" autofocus type="text" name="room_name" placeholder="Room Name" required>
+        <p>Select who should be in the room:</p>
+        <select name="additional_users" multiple>
+            {% for group_name, profiles in users.items %}
+                <optgroup label="{{ group_name }}">
+                    {% for profile in profiles %}
+                        <option value="{{ profile.user.id }}">{{ profile.user.first_name }} {{ profile.user.last_name }}</option>
+                    {% endfor %}
+                </optgroup>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Create">
+    </form>
+
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+{% endblock %}
