@@ -1,0 +1,20 @@
+{% extends "users/layout.html" %}
+
+{% block body %}
+    <form action="{% url 'users:create_user_get_role' %}" method="post">
+        {% csrf_token %}
+        <select name="role" required>
+            <option value="" disabled selected>Select</option>
+            {% for value, label in roles %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit">
+    </form>
+
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+    <a href="{% url 'users:login' %}">Back to Login</a>
+{% endblock %}

@@ -8,7 +8,10 @@ urlpatterns = [
     # Main user views
     path("", views.index, name="index"),
     
-    path("create/", views.create_user, name="create"),
+    # User creation views
+    path("create/", views.create_user_get_role, name="create_user_get_role"),
+
+    path("create/<str:role>/", views.create_user, name="create"),
 
     # Authentication views
     path("login/", auth_views.LoginView.as_view(

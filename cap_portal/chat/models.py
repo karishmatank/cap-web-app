@@ -14,3 +14,8 @@ class Message(models.Model):
     # Add in formatting if we need to print to terminal. Print first 20 characters of a message
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}: {self.text[:20]}"
+
+# TODO: Chat room model. Creates chat rooms for users to join and for messages to be sent over
+# These will include both group and private chat rooms
+class ChatRoom(models.Model):
+    pass

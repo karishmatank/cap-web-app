@@ -6,8 +6,30 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
+from .models import UserProfile, ROLE_CHOICES
+
 # Create your views here.
-def create_user(request):
+
+def create_user_get_role(request):
+    if request.method == "POST":
+        # Validation
+        role = request.POST["role"]
+
+        if role not in [i[0] for i in ROLE_CHOICES]:
+            return render(request, "users/create_user_get_role.html", {
+                "message": "Please choose a valid role.",
+                "roles": ROLE_CHOICES
+            })
+        
+        # Otherwise, we have a valid role, let's move on to creating the user
+        return HttpResponseRedirect(reverse("users:create", args=(role,)))
+
+    return render(request, "users/create_user_get_role.html", {
+        "roles": ROLE_CHOICES
+    })
+
+
+def create_user(request, role):
     if request.method == 'POST':
         # Check if there is already a user associated with the email
         user_exists = User.objects.filter(email=request.POST["email"]).exists()
@@ -31,11 +53,37 @@ def create_user(request):
             last_name=request.POST["last_name"]
         )
 
-        return render(request, "users/login.html", {
-            "message": "Account created, please log in!"
-        })
+        # Create a user profile
+        new_profile = UserProfile.objects.create(
+            user=new_user,
+            role=role
+        )
 
-    return render(request, "users/create_user.html")
+        if role == 'mentee':
+            mentor_id = request.POST["mentor"]
+            mentor = User.objects.get(id=mentor_id)
+            new_profile.mentors.add(mentor)
+
+        # return render(request, "users/login.html", {
+        #     "message": "Account created, please log in!"
+        # })
+        
+        # TODO: See if we can do this in the future with passing through the message commented out above
+        return HttpResponseRedirect(reverse("users:login"))
+
+    if role == "mentee":
+        # Get a list of possible mentors
+        # The assumption is that mentors are already input into the system by the time mentees start signing up
+        mentors = UserProfile.objects.filter(role="mentor")
+
+        return render(request, "users/create_user.html", {
+            "mentors": mentors,
+            "role": role,
+        })
+    else:
+        return render(request, "users/create_user.html", {
+            "role": role,
+        })
 
 @login_required
 def index(request):
