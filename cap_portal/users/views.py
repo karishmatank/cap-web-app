@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -64,13 +65,11 @@ def create_user(request, role):
             mentor = User.objects.get(id=mentor_id)
             new_profile.mentors.add(mentor)
 
-        # return render(request, "users/login.html", {
-        #     "message": "Account created, please log in!"
-        # })
+        messages.success(request, "Account created, please log in!")
         
-        # TODO: See if we can do this in the future with passing through the message commented out above
         return HttpResponseRedirect(reverse("users:login"))
 
+    # method = 'get'
     if role == "mentee":
         # Get a list of possible mentors
         # The assumption is that mentors are already input into the system by the time mentees start signing up

@@ -21,6 +21,12 @@
         <div>{{ message }}</div>
     {% endif %}
 
+    {% if messages %}
+        {% for i in messages %}
+            <div>{{ i }}</div>
+        {% endfor %}
+    {% endif %}
+
     {% if form.errors %}
         <div>Your username and password didn't match. Please try again.</div>
     {% endif %}
