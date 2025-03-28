@@ -67,12 +67,27 @@
             newMessage.classList.add('message');
 
             // Format timestamp of new message
-            const newTimestamp = new Date().toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
+            const now = new Date();
+            const newDate = now.toLocaleDateString('en-US', {year: 'numeric', 'month': "long", day: 'numeric'});
+            const newTimestamp = now.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
 
             // Populate new message
             newMessage.innerHTML = `<span class="timestamp">${newTimestamp}</span> <span class="content"><strong>${data.first_name} ${data.last_name}</strong>: ${data.message}</span>`;
             
-            // Add to existing chat log
+            // Check the date of the last message in history. 
+            // If we are typing a message on a new date, we'll have to append on the current date ahead of the new message
+            const dayHeaders = chatLog.querySelectorAll(".day-header");
+            const lastDayHeader = dayHeaders.length ? dayHeaders[dayHeaders.length - 1] : null;
+            const lastDate = lastDayHeader ? lastDayHeader.textContent.replace(/─/g, '').trim() : null;
+
+            if (lastDate != newDate) {
+                const newDayHeader = document.createElement('div');
+                newDayHeader.classList.add('day-header');
+                newDayHeader.textContent = `─── ${newDate} ───`;
+                chatLog.appendChild(newDayHeader);
+            }
+            
+            // Add new message to existing chat log
             chatLog.appendChild(newMessage);
 
             // Scroll to bottom after new message is added
