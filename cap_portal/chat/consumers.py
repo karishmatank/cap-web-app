@@ -2,6 +2,7 @@
 
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.db import database_sync_to_async
 from chat.models import ChatRoom
 from .models import Message
 from asgiref.sync import sync_to_async
@@ -17,7 +18,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_id = self.scope["url_route"]["kwargs"]["room_id"]
 
         # Get ChatRoom
-        self.room = await sync_to_async(ChatRoom.objects.get)(id=self.room_id)
+        self.room = await database_sync_to_async(ChatRoom.objects.get)(id=self.room_id)
+
+        # Check whether user is a part of this group chat
+        user_in_chat = await database_sync_to_async(
+            lambda: self.room.members.filter(id=self.scope['user'].id).exists()
+        )()
+
+        if not user_in_chat:
+            await self.close()
+            return
 
         self.room_group_name = f"chat_{self.room_id}"
 

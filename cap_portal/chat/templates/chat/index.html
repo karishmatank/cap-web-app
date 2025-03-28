@@ -7,15 +7,22 @@
     <title>Chat Rooms</title>
 </head>
 <body>
+    {% if messages %}
+        {% for message in messages %}
+            <div>{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
     What chat room would you like to enter?<br>
     {% for room in rooms %}
         <a href="{% url 'chat:room' room.id %}">{{ room.name }}</a>
     {% empty %}
         <p>No chat rooms visible</p>
     {% endfor %}
-
-    <a href="{% url 'chat:new' %}">Start a new chat room</a>
-
+    <div>
+        <a href="{% url 'chat:new' %}">Start a new chat room</a>
+    </div>
+    
     <!-- <input id="room-name-input" type="text" size="100"><br>
     <input id="room-name-submit" type="button" value="Enter"> -->
 

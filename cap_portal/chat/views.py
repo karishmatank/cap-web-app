@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from .models import Message, ChatRoom
 from users.models import UserProfile
+from chat.decorators import user_in_chat
 
 # Create your views here.
 @login_required
@@ -19,6 +20,7 @@ def index(request):
     })
 
 @login_required
+@user_in_chat
 def room(request, room_id):
     # Show most recent 50 messages upon first load
     room = ChatRoom.objects.get(pk=room_id)
@@ -63,5 +65,6 @@ def new(request):
         })
 
 @login_required
-def manage(request):
+@user_in_chat
+def manage(request, room_id):
     pass
