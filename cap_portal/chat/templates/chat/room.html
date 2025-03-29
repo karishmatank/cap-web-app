@@ -10,6 +10,18 @@
     <link rel="stylesheet" href="{% static 'chat/styles.css' %}">
 </head>
 <body>
+    <div class="room-info">
+        <h1>{{ name }}</h1>
+        <div class="members-list">
+            <h2>Members</h2>
+            <ul>
+                {% for member in members %}
+                    <li>{{ member.first_name }} {{ member.last_name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <h2>Chat</h2>
     <div id="chat-log">
         {% spaceless %}
         {% regroup messages by timestamp.date as date_groups %}
@@ -30,7 +42,10 @@
     <br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
-    {{ room_name|json_script:"room-name" }}
+    <div>
+        <a href="{% url 'chat:index' %}">Back to Chats</a>
+    </div>
+    {{ room_id|json_script:"room-id" }}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             // Scroll to the bottom of the chat window
@@ -48,13 +63,13 @@
         });
 
         // Chat related
-        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        const roomId = JSON.parse(document.getElementById('room-id').textContent);
 
         const chatSocket = new WebSocket(
             'ws://'
             + window.location.host
             + '/ws/chat/'
-            + roomName
+            + roomId
             + '/'
         );
 
@@ -67,12 +82,27 @@
             newMessage.classList.add('message');
 
             // Format timestamp of new message
-            const newTimestamp = new Date().toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
+            const now = new Date();
+            const newDate = now.toLocaleDateString('en-US', {year: 'numeric', 'month': "long", day: 'numeric'});
+            const newTimestamp = now.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true});
 
             // Populate new message
             newMessage.innerHTML = `<span class="timestamp">${newTimestamp}</span> <span class="content"><strong>${data.first_name} ${data.last_name}</strong>: ${data.message}</span>`;
             
-            // Add to existing chat log
+            // Check the date of the last message in history. 
+            // If we are typing a message on a new date, we'll have to append on the current date ahead of the new message
+            const dayHeaders = chatLog.querySelectorAll(".day-header");
+            const lastDayHeader = dayHeaders.length ? dayHeaders[dayHeaders.length - 1] : null;
+            const lastDate = lastDayHeader ? lastDayHeader.textContent.replace(/─/g, '').trim() : null;
+
+            if (lastDate != newDate) {
+                const newDayHeader = document.createElement('div');
+                newDayHeader.classList.add('day-header');
+                newDayHeader.textContent = `─── ${newDate} ───`;
+                chatLog.appendChild(newDayHeader);
+            }
+            
+            // Add new message to existing chat log
             chatLog.appendChild(newMessage);
 
             // Scroll to bottom after new message is added

@@ -12,7 +12,7 @@ ROLE_CHOICES = (
 )
 
 class UserProfile(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(choices=ROLE_CHOICES, max_length=255)
     mentors = models.ManyToManyField(User, related_name='mentees', blank=True)
 
