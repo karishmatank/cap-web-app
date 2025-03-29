@@ -27,6 +27,8 @@ def room(request, room_id):
     messages = Message.objects.filter(room_name=room).order_by('-timestamp')[:50]
     return render(request, "chat/room.html", {
         "room_id": room_id,
+        "name": room.name,
+        "members": room.members.all(),
         "messages": reversed(messages)  # Show oldest messages first
     })
 
@@ -67,4 +69,8 @@ def new(request):
 @login_required
 @user_in_chat
 def manage(request, room_id):
+    # TODO: Add in a way to allow users to change room name and members but
+    # I know in the future I won't want this to be its own page, will want it as an interactive part
+    # of the room page itself, so maybe this doesn't make sense to do until I figure out how to do
+    # in Javascript
     pass

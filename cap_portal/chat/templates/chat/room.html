@@ -10,6 +10,18 @@
     <link rel="stylesheet" href="{% static 'chat/styles.css' %}">
 </head>
 <body>
+    <div class="room-info">
+        <h1>{{ name }}</h1>
+        <div class="members-list">
+            <h2>Members</h2>
+            <ul>
+                {% for member in members %}
+                    <li>{{ member.first_name }} {{ member.last_name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <h2>Chat</h2>
     <div id="chat-log">
         {% spaceless %}
         {% regroup messages by timestamp.date as date_groups %}
@@ -30,6 +42,9 @@
     <br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
+    <div>
+        <a href="{% url 'chat:index' %}">Back to Chats</a>
+    </div>
     {{ room_id|json_script:"room-id" }}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
