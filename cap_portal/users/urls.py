@@ -48,5 +48,9 @@ urlpatterns = [
 
     path('reset-password/done/', auth_views.PasswordResetCompleteView.as_view(
         template_name="users/reset_password_complete.html"
-    ), name="reset_password_complete")
+    ), name="reset_password_complete"),
+
+    # API views
+    path("api/me/", views.get_current_user),
+
 ]

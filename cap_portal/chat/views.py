@@ -8,6 +8,11 @@ from .models import Message, ChatRoom
 from users.models import UserProfile
 from chat.decorators import user_in_chat
 
+from .serializers import MessageSerializer, ChatRoomSerializer, UserSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 # Create your views here.
 @login_required
 def index(request):
@@ -74,3 +79,74 @@ def manage(request, room_id):
     # of the room page itself, so maybe this doesn't make sense to do until I figure out how to do
     # in Javascript
     pass
+
+
+
+
+# API of all the rooms the current user is in
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def chat_list(request):
+    current_user = request.user
+    room_list = current_user.chat_rooms.all()
+    serializer = ChatRoomSerializer(room_list, many=True)
+    return Response(serializer.data)
+
+# API of all the messages within a chat room
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def chat_messages(request, room_id):
+    room = ChatRoom.objects.get(pk=room_id, members=request.user)
+    messages = room.room_messages.order_by('-timestamp')[:50]
+    serializer = MessageSerializer(reversed(messages), many=True)  # Show oldest messages first
+    return Response(serializer.data)
+
+# # Post a new message to the chat
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def post_messages(request, room_id):
+#     room = ChatRoom.objects.get(pk=room_id, members=request.user)
+#     new_message = request.data.get("content", "").strip()
+#     if not new_message:
+#         return Response({"error": "Empty message"}, status=400)
+    
+#     # Create a new message
+#     message = Message.objects.create(
+#         user=request.user,
+#         room_name=room,
+#         text=new_message
+#     )
+
+#     return Response({"success": True, "message": "Message sent"})
+
+# Create a new chat room
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_new_room(request):
+    # We will allow the user to set the room name and member list later
+    new_room = ChatRoom.objects.create()
+
+    # Auto add the creator
+    new_room.members.add(request.user)
+
+    serializer = ChatRoomSerializer(new_room)
+
+    # 201 status code = "created"
+    return Response(serializer.data, status=201)
+
+# Update room info. Patch means modifying a resource
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_room(request, room_id):
+    room = ChatRoom.objects.get(id=room_id, participants=request.user)
+
+    if 'name' in request.data:
+        room.name = request.data['name']
+    
+    # TODO: This assumes we are getting the full set of names, update later if we are only getting new members
+    if 'members' in request.data:
+        room.members.set(request.data['members'])
+
+    room.save()
+    serializer = ChatRoomSerializer(room)
+    return Response(serializer.data)

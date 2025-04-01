@@ -9,6 +9,10 @@ from django.urls import reverse
 
 from .models import UserProfile, ROLE_CHOICES
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 # Create your views here.
 
 def create_user_get_role(request):
@@ -95,3 +99,14 @@ def index(request):
 @login_required
 def logout_view(request):
     return logout_then_login(request)
+
+# API to get current user for React
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_current_user(request):
+    user = request.user
+    return Response({
+        "id": user.id,
+        "first_name": user.first_name,
+        "last_name": user.last_name
+    })
