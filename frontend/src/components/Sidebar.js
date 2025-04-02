@@ -1,28 +1,14 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
 
-
-function Sidebar() {
-    /* We will store rooms in an empty list */
-    const [rooms, setRooms] = useState([]);
-
-    /* When the empty list renders upon loading, we'll populate it with a list of chat rooms
-    that the user is a part of */
-    useEffect(() => {
-        axios.get("/chat/api/chats")
-        .then((response) => {
-            setRooms(response.data);
-        })
-        .catch((error) => {
-            console.error("Error fetching rooms", error);
-        });
-    }, []);
-
+function Sidebar({ rooms, newChat }) {
+    
     return (
         <div className="sidebar">
+            <button onClick={newChat} style={{ margin: "1rem" }}>
+                + New Chat
+            </button>
             <ul>
-                {rooms.map((room) =>(
+                {rooms.map((room) => (
                     <li key={room.id}>
                         <Link to={`/chat/${room.id}`}>
                             {room.name || "Untitled Room"}

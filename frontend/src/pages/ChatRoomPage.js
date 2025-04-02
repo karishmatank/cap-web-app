@@ -10,6 +10,11 @@ function ChatRoomPage() {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
 
+    /* Reset message history upon roomId refresh */
+    useEffect(() => {
+        setMessages([]);
+    }, [roomId]);
+
     const socketRef = useRef(null); // Ref to store the WebSocket instance
     const bottomRef = useRef(null); // For scrolling automatically to the bottom upon a new message
 

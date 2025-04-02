@@ -110,3 +110,21 @@ def get_current_user(request):
         "first_name": user.first_name,
         "last_name": user.last_name
     })
+
+# Search for users
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users(request):
+    query = request.GET.get("q", "")
+    users = User.objects.filter(first_name__icontains=query)[:10]
+
+    data = [
+        {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
+        for user in users
+    ]
+
+    return Response(data)

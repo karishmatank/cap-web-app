@@ -1,12 +1,13 @@
 import './App.css';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, matchPath, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
+import RoomInfoSidebar from './components/RoomInfoSidebar';
 import ChatRoomPage from './pages/ChatRoomPage';
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { getCookie } from './utils/csrf';
 
-
-function App() {
+function Layout() {
   /* Get current user at start up */
 
   const [currentUser, setCurrentUser] = useState(null);
@@ -21,16 +22,68 @@ function App() {
     });
   }, []);
 
+  /* Match current route against /chat/:roomId to get the roomId */
+  const location = useLocation();
+  const match = matchPath("/chat/:roomId", location.pathname);
+  const roomId = match?.params?.roomId;
+
+  /* Get a refreshed list of chat rooms */
+
+  // We will store rooms in an empty list
+  const [rooms, setRooms] = useState([]);
+
+  // When the empty list renders upon loading, we'll populate it with a list of chat rooms that the user is a part of
+  const fetchChatRooms = () => {
+    axios.get("/chat/api/chats/")
+    .then((response) => {
+        setRooms(response.data);
+    })
+    .catch((error) => {
+        console.error("Error fetching rooms", error);
+    });
+  }
+
+  useEffect(() => {
+    fetchChatRooms();
+  }, []);
+
+  /* New chat */
+  const navigate = useNavigate();
+
+  const newChat = () => {
+    axios.post("/chat/api/chats/create/", {}, {
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+    })
+    .then((response) => {
+        const newRoomId = response.data.id;
+        fetchChatRooms();
+        navigate(`/chat/${newRoomId}`);
+    })
+    .catch((error) => {
+        console.error("Error creating new room", error);
+    });
+  };
+  
+
+  return (
+    <div className="app-container">
+      <Sidebar rooms={rooms} newChat={newChat} />
+      <Routes>
+        <Route path="/chat/:roomId" element={<ChatRoomPage />} />
+        <Route path="*" element={<div className="chat-window">Select a chat</div>} />
+      </Routes>
+      <RoomInfoSidebar roomId={roomId} refreshRooms={fetchChatRooms} />
+    </div>
+  );
+}
+
+function App() {
+  
   return (
     <Router>
-      <div className="app-container">
-        <Sidebar />
-        <Routes>
-          <Route path="/chat/:roomId" element={<ChatRoomPage />} />
-          <Route path="*" element={<div className="chat-window">Select a chat</div>} />
-        </Routes>
-        <div className="room-info">Room Info</div>
-      </div>
+      <Layout />
     </Router>
   );
 }

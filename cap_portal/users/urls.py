@@ -52,5 +52,6 @@ urlpatterns = [
 
     # API views
     path("api/me/", views.get_current_user),
+    path("api/search/", views.search_users)
 
 ]
