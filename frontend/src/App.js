@@ -72,7 +72,7 @@ function Layout() {
       <Sidebar rooms={rooms} newChat={newChat} />
       <Routes>
         <Route path="/chat/:roomId" element={<ChatRoomPage currentUser={currentUser} />} />
-        <Route path="*" element={<div className="chat-window">Select a chat</div>} />
+        <Route path="*" element={<div className="chat-window no-chat-selected">Select a chat</div>} />
       </Routes>
       <RoomInfoSidebar roomId={roomId} refreshRooms={fetchChatRooms} />
     </div>

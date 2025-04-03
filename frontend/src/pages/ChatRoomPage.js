@@ -11,10 +11,16 @@ function ChatRoomPage({ currentUser }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const textareaRef = useRef(null);
+    const [hasMore, setHasMore] = useState(true);
+    const loadingOlderRef = useRef(null);
+    const chatLogRef = useRef(null);
+    const hasScrolledOnLoad = useRef(false);
 
     /* Reset message history upon roomId refresh */
     useEffect(() => {
         setMessages([]);
+        setHasMore(true);
+        hasScrolledOnLoad.current = false;
     }, [roomId]);
 
     const socketRef = useRef(null); // Ref to store the WebSocket instance
@@ -51,19 +57,69 @@ function ChatRoomPage({ currentUser }) {
 
     /* When we receive a new message ("messages" is refreshed), scroll to the bottom of the chat window */
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({'behavior': 'smooth'});
+        if (!hasScrolledOnLoad.current && messages.length > 0) {
+            bottomRef.current?.scrollIntoView({'behavior': 'auto'});
+            hasScrolledOnLoad.current = true;
+        }
     }, [messages]);
 
+    
     /* Whenever the roomId parameter changes, reload the message list */
     useEffect(() => {
         axios.get(`/chat/api/chats/${roomId}/messages/`)
         .then((response) => {
-            setMessages(response.data);
+            setMessages(response.data.messages);
+            setHasMore(response.data.has_more);
         })
         .catch((error) => {
             console.error("Error fetching messages", error);
         })
     }, [roomId]);
+
+    /* Whenever the user scrolls to the top of the chat-log, if there are older messages, get those and display them */
+    useEffect(() => {
+        const chatLog = chatLogRef.current;
+        if (!chatLog) return;
+
+        const handleScroll = () => {
+            if (chatLog.scrollTop < 50 && hasMore && !loadingOlderRef.current && messages.length > 0) {
+                // Get timestamp of oldest message
+                const oldestMessage = messages[0];
+                const before = oldestMessage?.timestamp;
+                if (!before) return;
+
+                const previousScrollHeight = chatLog.scrollHeight;
+
+                if (loadingOlderRef.current) return;
+                loadingOlderRef.current = true;
+
+                // Get older messages
+                axios.get(`/chat/api/chats/${roomId}/messages/`, {
+                    'params': { "before": before },
+                })
+                .then((response) => {
+                    // Get a deduplicated list of all messages to be displayed
+                    setMessages((prev) => {
+                        const currentIds = new Set(messages.map((m) => m.id));
+                        const deduped = response.data.messages.filter((m) => !currentIds.has(m.id));
+                        return [...deduped, ...prev];
+                    });
+                    setHasMore(response.data.has_more);
+                })
+                .finally(() => {
+                    loadingOlderRef.current = false;
+                    // Maintain scroll position after loading older messages
+                    setTimeout(() => {
+                        chatLog.scrollTop = chatLog.scrollHeight - previousScrollHeight;
+                    }, 0);
+                });
+            }
+        };
+
+        chatLog.addEventListener("scroll", handleScroll);
+        return () => chatLog.removeEventListener("scroll", handleScroll);
+
+    }, [hasMore, messages, roomId]);
 
     /* Write a function to group message by date, as I want this displayed in the end div */
     function groupByDate(messages) {
@@ -91,7 +147,7 @@ function ChatRoomPage({ currentUser }) {
 
     return (
         <div className="chat-window">
-            <div className="chat-log">
+            <div className="chat-log" ref={chatLogRef}>
                 {Object.entries(groupedMessages).map(([date, messages]) => (
                     <div key={date}>
                         <div className="day-header">─── {date} ───</div>
@@ -117,8 +173,8 @@ function ChatRoomPage({ currentUser }) {
                         })}
                     </div>
                 ))}
+                <div ref={bottomRef} />
             </div>
-            <div ref={bottomRef} />
             <div className="message-input-form">
                 <form className="message-input-form" onSubmit={(event) => {
                     event.preventDefault();

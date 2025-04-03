@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User 
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -97,27 +98,22 @@ def chat_list(request):
 @permission_classes([IsAuthenticated])
 def chat_messages(request, room_id):
     room = ChatRoom.objects.get(pk=room_id, members=request.user)
-    messages = room.room_messages.order_by('-timestamp')[:50]
-    serializer = MessageSerializer(reversed(messages), many=True)  # Show oldest messages first
-    return Response(serializer.data)
+    messages = room.room_messages.order_by('-timestamp')
 
-# # Post a new message to the chat
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def post_messages(request, room_id):
-#     room = ChatRoom.objects.get(pk=room_id, members=request.user)
-#     new_message = request.data.get("content", "").strip()
-#     if not new_message:
-#         return Response({"error": "Empty message"}, status=400)
-    
-#     # Create a new message
-#     message = Message.objects.create(
-#         user=request.user,
-#         room_name=room,
-#         text=new_message
-#     )
+    # We'll use a before=<timestamp> approach 
+    before = request.query_params.get('before')
+    if before:
+        messages = messages.filter(timestamp__lt=before)
 
-#     return Response({"success": True, "message": "Message sent"})
+    # Paginate messages
+    paginator = Paginator(messages, 10)
+    page = paginator.page(1)
+
+    serializer = MessageSerializer(reversed(page.object_list), many=True)  # Show oldest messages first
+    return Response({
+        'messages': serializer.data,
+        'has_more': page.has_next(),
+    })
 
 # Create a new chat room
 @api_view(['POST'])

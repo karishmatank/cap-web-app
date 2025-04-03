@@ -45,6 +45,10 @@
     border-right: 1px solid #ccc;
 }
 
+.no-chat-selected {
+    padding: 1rem;
+}
+
 form.message-input-form {
     border: 0px;
     padding: 0rem;
