@@ -13,7 +13,7 @@ function Layout() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    axios.get("users/api/me/")
+    axios.get("/users/api/me/")
     .then((response) => {
       setCurrentUser(response.data);
     })
@@ -71,7 +71,7 @@ function Layout() {
     <div className="app-container">
       <Sidebar rooms={rooms} newChat={newChat} />
       <Routes>
-        <Route path="/chat/:roomId" element={<ChatRoomPage />} />
+        <Route path="/chat/:roomId" element={<ChatRoomPage currentUser={currentUser} />} />
         <Route path="*" element={<div className="chat-window">Select a chat</div>} />
       </Routes>
       <RoomInfoSidebar roomId={roomId} refreshRooms={fetchChatRooms} />

@@ -2,13 +2,15 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { format, parseISO } from "date-fns";
+import "../ChatRoomPage.css"
 
-function ChatRoomPage() {
+function ChatRoomPage({ currentUser }) {
     /* Access the parameter roomId*/
     const { roomId } = useParams();
 
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
+    const textareaRef = useRef(null);
 
     /* Reset message history upon roomId refresh */
     useEffect(() => {
@@ -89,46 +91,70 @@ function ChatRoomPage() {
 
     return (
         <div className="chat-window">
-            {Object.entries(groupedMessages).map(([date, messages]) => (
-                <div key={date}>
-                    <div className="day-header">─── {date} ───</div>
-                    {messages.map((msg) => (
-                        <div key={msg.id} className="message">
-                            <span className="timestamp">
-                                {format(parseISO(msg.timestamp), "h:mm a")}{" "} 
-                            </span>
-                            <span className="content">
-                                {msg.user.first_name} {msg.user.last_name}: {msg.text}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            ))}
-            <div ref={bottomRef} />
-            <form onSubmit={(event) => {
-                event.preventDefault();
-                if (!newMessage.trim()) {
-                    return;
-                }
-                
-                socketRef.current.send(
-                    JSON.stringify({
-                        "type": "chat_message",
-                        "message": newMessage
-                    })
-                );
+            <div className="chat-log">
+                {Object.entries(groupedMessages).map(([date, messages]) => (
+                    <div key={date}>
+                        <div className="day-header">─── {date} ───</div>
+                        {messages.map((msg) => {
+                            
+                            const isOwnMessage = msg.user.id === currentUser?.id;
 
-                setNewMessage("");
-            }}>
-                <input 
-                    type="text" 
-                    value={newMessage} 
-                    onChange={(event) => setNewMessage(event.target.value)} 
-                    placeholder="Type a message..."
-                    style={{ width: "80%", padding: "0.5rem" }}
-                />
-                <button type="submit" disabled={!isSocketReady} style={{ padding: "0.5rem" }}>Send</button>
-            </form>
+                            return (
+                                <div key={msg.id} className={`chat-message ${isOwnMessage ? "own" : "other"}`}>
+                                    <span className="timestamp">
+                                        {format(parseISO(msg.timestamp), "h:mm a")}{" "} 
+                                    </span>
+                                    <div className="bubble">
+                                        <div className="sender-name">
+                                            {msg.user.first_name} {msg.user.last_name}
+                                        </div>
+                                        <div className="message-text">
+                                            {msg.text}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))}
+            </div>
+            <div ref={bottomRef} />
+            <div className="message-input-form">
+                <form className="message-input-form" onSubmit={(event) => {
+                    event.preventDefault();
+                    if (!newMessage.trim()) {
+                        return;
+                    }
+                    
+                    socketRef.current.send(
+                        JSON.stringify({
+                            "type": "chat_message",
+                            "message": newMessage
+                        })
+                    );
+
+                    setNewMessage("");
+                }}>
+                    <textarea
+                        ref={textareaRef}
+                        className="message-textarea" 
+                        value={newMessage} 
+                        onChange={(event) => {
+                            setNewMessage(event.target.value);
+                            
+                            // Auto resize
+                            const textarea = textareaRef.current;
+                            if (textarea) {
+                                textarea.style.height = "auto";
+                                textarea.style.height = `${textarea.scrollHeight}px`;
+                            }
+                        }} 
+                        placeholder="Type a message..."
+                        rows={1}
+                    />
+                    <button type="submit" disabled={!isSocketReady} style={{ padding: "0.5rem" }}>Send</button>
+                </form>
+            </div>
         </div>
     );
 

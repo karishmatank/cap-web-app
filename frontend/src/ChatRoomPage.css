@@ -1,0 +1,104 @@
+.bubble {
+    background-color: #f0f0f0;
+    padding: 0.75rem;
+    border-radius: 1rem;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.chat-message {
+    display: flex;
+    max-width: 100%;
+    margin-bottom: 15px;
+}
+
+.chat-message.own {
+    justify-content: flex-end;
+    align-self: flex-end;
+}
+
+.chat-message.own .bubble {
+    background-color: #cce4ff;
+}
+
+.chat-message.other {
+    justify-content: flex-start;
+    align-self: flex-start;
+}
+
+.chat-log {
+    overflow-y: auto;
+    flex: 1;
+    padding: 1rem;
+}
+
+.chat-window {
+    list-style: none;
+    padding-top: 1rem;
+    margin: 0;
+    flex-grow: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 100vh;
+    overflow: hidden;
+    display: flex !important;
+    border-right: 1px solid #ccc;
+}
+
+form.message-input-form {
+    border: 0px;
+    padding: 0rem;
+    display: flex !important;
+}
+
+.message-input-form {
+    flex-shrink: 0;
+    border-top: 1px solid #ddd;
+    padding: 0.75rem;
+    background: #fff;
+    align-items: flex-end;
+}
+
+.message-input-form input[type="text"] {
+    flex-grow: 1;
+    padding: 0.6rem 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 1rem;
+}
+
+.message-input-form button {
+    margin-left: 0.5rem;
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+    border-radius: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.message-text {
+    font-size: 0.95rem;
+}
+
+.message-textarea {
+    flex: 1;
+    resize: none;
+    overflow-y: auto;
+    min-height: 2rem;
+    max-height: 6rem;
+    border: 1px solid #ccc;
+    border-radius: 1rem;
+    padding: 0.6rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.4;
+    font-family: sans-serif;
+}
+
+.sender-name {
+    font-size: 0.75rem;
+    color: #555;
+    margin-bottom: 0.25rem;
+}
+

@@ -1,23 +1,29 @@
 .app-container {
   display: flex;
-  height: 100vh;
+  height: 100%;
   font-family: sans-serif;
+  overflow: hidden;
 }
 
 .sidebar {
-  width: 15%;
+  width: 25%;
   border-right: 1px solid #ccc;
   padding: 1rem;
   overflow-y: auto;
+  background-color: #f9f9f9;
 }
 
 .chat-window {
-  width: 60%;
-  border-right: 1px solid #ccc;
-  padding: 1rem;
-  display: flex;
+  list-style: none;
+  padding-top: 1rem;
+  margin: 0;
+  flex-grow: 1;
   flex-direction: column;
+  gap: 0.5rem;
+  max-height: 100vh;
+  overflow: hidden;
 }
+
 
 .room-info {
   width: 25%;
@@ -47,4 +53,6 @@
 .timestamp {
   font-size: 0.8em;
   color: #aaa;
+  align-content: center;
+  margin-right: 10px;
 }
