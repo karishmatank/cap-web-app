@@ -43,6 +43,7 @@ function ChatRoomPage({ currentUser }) {
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
             setMessages((prev) => [...prev, data.message]);  /* Always appends to latest version of the state */
+            hasScrolledOnLoad.current = false; // Adding this on to be able to trigger the scroll to bottom (see next)
         }
 
         socket.onclose = () => {
