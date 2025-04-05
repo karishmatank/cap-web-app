@@ -156,6 +156,11 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
     return (
         <div className="chat-window">
             <div className="chat-log" ref={chatLogRef}>
+                {(() => {
+                    if (!hasMore) {
+                        return <div className="chat-start-indicator">Start of chat history</div>
+                    }
+                })()}
                 {Object.entries(groupedMessages).map(([date, messages]) => (
                     <div key={date}>
                         <div className="day-header">─── {date} ───</div>

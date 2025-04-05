@@ -38,6 +38,13 @@
   font-weight: bold;
 }
 
+.chat-start-indicator {
+  color: #666;
+  margin: 16px 0 8px;
+  font-weight: bold;
+  font-style: italic;
+}
+
 .message {
   margin: 5px 0;
   padding: 0;
