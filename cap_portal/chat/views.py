@@ -91,7 +91,16 @@ def chat_list(request):
     current_user = request.user
     room_list = current_user.chat_rooms.all()
     serializer = ChatRoomSerializer(room_list, many=True)
-    return Response(serializer.data)
+
+    # Sort data in order of last message such that latest last message is first
+    data = serializer.data
+    sorted_data = sorted([i for i in data if i["last_message"]], 
+                          key=lambda x: x['last_message']['timestamp'], 
+                          reverse=True
+                          )
+    full_data = sorted_data + [i for i in data if not i["last_message"]]  # Adds back rooms with no messages to the end
+
+    return Response(full_data)
 
 # API of all the messages within a chat room
 @api_view(['GET'])

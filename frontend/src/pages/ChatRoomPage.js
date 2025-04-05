@@ -4,7 +4,7 @@ import axios from "axios";
 import { format, parseISO } from "date-fns";
 import "../ChatRoomPage.css"
 
-function ChatRoomPage({ currentUser }) {
+function ChatRoomPage({ currentUser, refreshRooms }) {
     /* Access the parameter roomId*/
     const { roomId } = useParams();
 
@@ -56,11 +56,18 @@ function ChatRoomPage({ currentUser }) {
         }
     }, [roomId]);
 
-    /* When we receive a new message ("messages" is refreshed), scroll to the bottom of the chat window */
+    /* When we receive a new message ("messages" is refreshed), 
+    scroll to the bottom of the chat window + refresh room list on Sidebar to reflect latest message*/
+    const refreshRoomsRef = useRef(refreshRooms);
+    useEffect(() => {
+        refreshRoomsRef.current = refreshRooms;
+    }, [refreshRooms]);
+
     useEffect(() => {
         if (!hasScrolledOnLoad.current && messages.length > 0) {
             bottomRef.current?.scrollIntoView({'behavior': 'auto'});
             hasScrolledOnLoad.current = true;
+            refreshRoomsRef.current();
         }
     }, [messages]);
 
