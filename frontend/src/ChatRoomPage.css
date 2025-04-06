@@ -127,6 +127,36 @@ form.message-input-form {
     padding: 1rem;
 }
 
+.scroll-to-bottom-button {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.4rem 0.9rem;
+    font-size: 0.875rem;
+    font-weight: bold;
+    color: #333;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    opacity: 0.85;
+    transition: all 0.2s ease;
+    z-index: 50;
+    font-family: sans-serif;
+}
+
+.scroll-to-bottom-button:hover {
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    opacity: 1;
+}
+
+.scroll-to-bottom-container {
+    position: relative;
+}
+
 .sender-name {
     font-size: 0.75rem;
     color: #555;

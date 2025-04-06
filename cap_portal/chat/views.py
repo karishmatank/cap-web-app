@@ -148,7 +148,7 @@ def update_room(request, room_id):
     if 'name' in request.data:
         room.name = request.data['name']
     
-    # TODO: This assumes we are getting the full set of names, update later if we are only getting new members
+    # We are getting the full set of names
     if 'members' in request.data:
         room.members.set(request.data['members'])
 

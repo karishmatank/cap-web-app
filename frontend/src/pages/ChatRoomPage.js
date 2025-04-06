@@ -31,6 +31,8 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
     const [typingUser, setTypingUser] = useState(null); // For displaying a user who is typing
 
     const [isSocketReady, setIsSocketReady] = useState(false);  // Prevents against sending a message too soon
+
+    const [isBottomVisible, setIsBottomVisible] = useState(null); // To help us create a "jump to latest" button
     
     /* Open WebSocket connection */
     useEffect(() => {
@@ -102,6 +104,33 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
         }
     }, [messages]);
 
+    /* Create a function to scroll back to the bottom if a user clicks on a "Jump to latest" button */
+    useEffect(() => {
+        const bottom = bottomRef.current;
+        const observer = new IntersectionObserver(([entry]) => {
+                setIsBottomVisible(entry.isIntersecting);
+            },
+            {
+                root: chatLogRef.current, // Where to look
+                threshold: 0.0, // I want the element to be entirely unvisible to trigger this
+            }
+        );
+
+        if (bottom) {
+            observer.observe(bottom);
+        }
+
+        // Cleans up if bottomRef changes or the component unmounts
+        return () => {
+            if (bottom) {
+                observer.unobserve(bottom);
+            }
+        }
+    }, []);
+
+    const scrollBackDown = () => {
+        bottomRef.current?.scrollIntoView({'behavior': 'smooth'});
+    };
     
     /* Whenever the roomId parameter changes, reload the message list */
     useEffect(() => {
@@ -223,6 +252,15 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                     </div>
                 ))}
                 <div ref={bottomRef} />
+            </div>
+            <div className="scroll-to-bottom-container">
+                {
+                    !isBottomVisible && (
+                        <button className="scroll-to-bottom-button"type="button" onClick={scrollBackDown}>
+                            Jump to Latest
+                        </button>
+                    )
+                }
             </div>
             <div className="typing-user-indicator">
             {
