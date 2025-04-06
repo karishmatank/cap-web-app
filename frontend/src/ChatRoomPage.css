@@ -45,8 +45,20 @@
     border-right: 1px solid #ccc;
 }
 
-.no-chat-selected {
-    padding: 1rem;
+.emoji-container {
+    position: relative; /* Anchors pop up */
+}
+
+.emoji-picker-popup {
+    position: absolute;
+    bottom: 3rem;
+    right: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.epr-icn-search {
+    display: none; /* Removes the search magnifying glass icon from emoji search bar */
 }
 
 form.message-input-form {
@@ -71,12 +83,23 @@ form.message-input-form {
     border-radius: 1rem;
 }
 
-.message-input-form button {
+.message-input-form button.submit {
     margin-left: 0.5rem;
     padding: 0.6rem 1rem;
     font-size: 1rem;
     border-radius: 1rem;
     background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.message-input-form button.emoji-picker {
+    margin-left: 0.5rem;
+    padding: 0.6rem 0.4rem;
+    font-size: 1rem;
+    border-radius: 1rem;
+    background-color: white;
     color: white;
     border: none;
     cursor: pointer;
@@ -98,6 +121,10 @@ form.message-input-form {
     font-size: 1rem;
     line-height: 1.4;
     font-family: sans-serif;
+}
+
+.no-chat-selected {
+    padding: 1rem;
 }
 
 .sender-name {

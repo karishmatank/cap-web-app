@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { format, parseISO } from "date-fns";
 import "../ChatRoomPage.css"
+import EmojiPicker from 'emoji-picker-react';
 
 function ChatRoomPage({ currentUser, refreshRooms }) {
     /* Access the parameter roomId*/
@@ -15,6 +16,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
     const loadingOlderRef = useRef(null);
     const chatLogRef = useRef(null);
     const hasScrolledOnLoad = useRef(false);
+    const [showPicker, setShowPicker] = useState(false);
 
     /* Reset message history upon roomId refresh */
     useEffect(() => {
@@ -158,6 +160,11 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
 
     }, [hasMore, messages, roomId]);
 
+    /* Handle emojis */
+    const handleEmojiSelect = (emojiData) => {
+        setNewMessage((prev) => prev + emojiData.emoji); // Append emoji to text
+    };
+
     /* Write a function to group message by date, as I want this displayed in the end div */
     function groupByDate(messages) {
         /* 
@@ -257,7 +264,19 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                         placeholder="Type a message..."
                         rows={1}
                     />
-                    <button type="submit" disabled={!isSocketReady} style={{ padding: "0.5rem" }}>Send</button>
+                    <div className="emoji-container">
+                        <button className="emoji-picker" type='button' onClick={() => setShowPicker((prev) => !prev)}>
+                            😊
+                        </button>
+                        {showPicker && (
+                            <div className="emoji-picker-popup">
+                                <EmojiPicker onEmojiClick={handleEmojiSelect} />
+                            </div>
+                        )}
+                    </div>
+                    <button className="submit" type="submit" disabled={!isSocketReady} style={{ padding: "0.5rem" }}>
+                        Send
+                    </button>
                 </form>
             </div>
         </div>
