@@ -4,10 +4,10 @@ from . import views
 
 app_name = "chat"
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("room/<int:room_id>/", views.room, name="room"),
-    path("room/new/", views.new, name="new"),
-    path("room/<int:room_id>/manage/", views.manage, name="manage"),
+    # path("", views.index, name="index"),
+    # path("room/<int:room_id>/", views.room, name="room"),
+    # path("room/new/", views.new, name="new"),
+    # path("room/<int:room_id>/manage/", views.manage, name="manage"),
 
     path('api/chats/', views.chat_list, name='chat_list'),
     path('api/chats/<int:room_id>/messages/', views.chat_messages, name='chat_messages'),

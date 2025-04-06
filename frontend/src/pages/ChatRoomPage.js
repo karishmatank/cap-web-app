@@ -214,6 +214,19 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
 
     const groupedMessages = groupByDate(messages);
 
+    /* Write a function that determines whether to show the sender of the message
+    We'll show the sender if the sender differs or if it's the same sender with the message sent > 5 min after last */
+    const showSenderName = (current, previous) => {
+        if (!previous) return true;
+        if (current.user.id !== previous.user.id) return true;
+
+        const currentTime = new Date(current.timestamp);
+        const previousTime = new Date(previous.timestamp);
+        const diff = (currentTime - previousTime) / 1000 / 60; // difference in minutes
+
+        return diff > 5;
+    }
+
     /* Format of groupedMessages is {"date": [msg1, msg2], ...} 
     Before we work with groupedMessages, we need to convert into an array of [key, value] pairs
     since .map() will only work with arrays and not objects. Object.entries does this*/
@@ -229,24 +242,33 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                 {Object.entries(groupedMessages).map(([date, messages]) => (
                     <div key={date}>
                         <div className="day-header">─── {date} ───</div>
-                        {messages.map((msg) => {
+                        {messages.map((msg, index) => {
                             
                             const isOwnMessage = msg.user.id === currentUser?.id;
+                            const previous = index > 0 ? messages[index-1] : null;
+                            const showSender = showSenderName(msg, previous);
 
                             return (
-                                <div key={msg.id} className={`chat-message ${isOwnMessage ? "own" : "other"}`}>
-                                    <span className="timestamp">
-                                        {format(parseISO(msg.timestamp), "h:mm a")}{" "} 
-                                    </span>
-                                    <div className="bubble">
-                                        <div className="sender-name">
+                                <>
+                                    {showSender && (
+                                        <div className={`sender-name ${isOwnMessage ? "own" : "other"}`}>
                                             {msg.user.first_name} {msg.user.last_name}
                                         </div>
-                                        <div className="message-text">
-                                            {msg.text}
+                                    )}
+                                    <div 
+                                        key={msg.id} 
+                                        className={`chat-message ${isOwnMessage ? "own" : "other"} `}
+                                    >
+                                        <span className="timestamp">
+                                            {format(parseISO(msg.timestamp), "h:mm a")}{" "} 
+                                        </span>
+                                        <div className="bubble">
+                                            <div className="message-text">
+                                                {msg.text}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </>
                             );
                         })}
                     </div>
