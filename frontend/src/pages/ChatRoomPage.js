@@ -17,6 +17,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
     const chatLogRef = useRef(null);
     const hasScrolledOnLoad = useRef(false);
     const [showPicker, setShowPicker] = useState(false);
+    const emojiPickerRef = useRef(null);
 
     /* Reset message history upon roomId refresh */
     useEffect(() => {
@@ -194,6 +195,25 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
         setNewMessage((prev) => prev + emojiData.emoji); // Append emoji to text
     };
 
+    /* Collapse emoji menu if we click outside of it */
+    useEffect(() => {
+        const emojiPicker = emojiPickerRef.current;
+        const handleClickOutside = (event) => {
+            if (emojiPicker && !emojiPicker.contains(event.target)) {
+                setShowPicker(false);
+            }
+        };
+
+        if (showPicker) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
+
+        // Cleans up if emojiPickerRef changes or the component unmounts
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        }
+    }, [showPicker]);
+
     /* Write a function to group message by date, as I want this displayed in the end div */
     function groupByDate(messages) {
         /* 
@@ -329,12 +349,12 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                             😊
                         </button>
                         {showPicker && (
-                            <div className="emoji-picker-popup">
+                            <div className="emoji-picker-popup" ref={emojiPickerRef}>
                                 <EmojiPicker onEmojiClick={handleEmojiSelect} />
                             </div>
                         )}
                     </div>
-                    <button className="submit" type="submit" disabled={!isSocketReady} style={{ padding: "0.5rem" }}>
+                    <button className="submit" type="submit" disabled={!isSocketReady}>
                         Send
                     </button>
                 </form>
