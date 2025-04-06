@@ -106,3 +106,9 @@ form.message-input-form {
     margin-bottom: 0.25rem;
 }
 
+.typing-user-indicator {
+    height: 15px;
+    font-size: 0.7rem;
+    font-style: italic;
+    color: #555;
+}

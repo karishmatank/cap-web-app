@@ -25,6 +25,8 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
 
     const socketRef = useRef(null); // Ref to store the WebSocket instance
     const bottomRef = useRef(null); // For scrolling automatically to the bottom upon a new message
+    const typingTimeout = useRef(null); // For detecting when a user is typing or not
+    const [typingUser, setTypingUser] = useState(null); // For displaying a user who is typing
 
     const [isSocketReady, setIsSocketReady] = useState(false);  // Prevents against sending a message too soon
     
@@ -42,8 +44,18 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
 
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            setMessages((prev) => [...prev, data.message]);  /* Always appends to latest version of the state */
-            hasScrolledOnLoad.current = false; // Adding this on to be able to trigger the scroll to bottom (see next)
+
+            if (data.type === "message") {
+                setMessages((prev) => [...prev, data.message]);  /* Always appends to latest version of the state */
+                hasScrolledOnLoad.current = false; // Adding this on to be able to trigger the scroll to bottom (see next)
+            } else if (data.type === "typing") {
+                if (data.user.id !== currentUser.id) {
+                    setTypingUser(`${data.user.first_name} ${data.user.last_name}`);
+                    setTimeout(() => {
+                        setTypingUser(null);
+                    }, 2000);
+                }
+            }
         }
 
         socket.onclose = () => {
@@ -55,6 +67,23 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
             socket.close();
         }
     }, [roomId]);
+
+    /* Detect when a user is typing */
+    const handleTyping = () => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(
+                JSON.stringify({
+                    "type": "typing",
+                })
+            );
+        }
+
+        // "Debounce to avoid flooding." This stops the "user is typing" message if the user doesn't type for 3s
+        if (typingTimeout.current) clearTimeout(typingTimeout.current);
+        typingTimeout.current = setTimeout(() => {
+            // Not sending a stop typing message for now
+        }, 2000);
+    };
 
     /* When we receive a new message ("messages" is refreshed), 
     scroll to the bottom of the chat window + refresh room list on Sidebar to reflect latest message*/
@@ -188,6 +217,11 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                 ))}
                 <div ref={bottomRef} />
             </div>
+            <div className="typing-user-indicator">
+            {
+                typingUser && <p>{typingUser} is typing...</p>
+            }
+            </div>
             <div className="message-input-form">
                 <form className="message-input-form" onSubmit={(event) => {
                     event.preventDefault();
@@ -210,6 +244,8 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                         value={newMessage} 
                         onChange={(event) => {
                             setNewMessage(event.target.value);
+
+                            handleTyping();
                             
                             // Auto resize
                             const textarea = textareaRef.current;

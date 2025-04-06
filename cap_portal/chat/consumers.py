@@ -47,37 +47,66 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket 
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json["message"]
+        msg_type = text_data_json["type"]
 
-        # Save to DB
-        msg = await database_sync_to_async(Message.objects.create)(
-            user=self.scope["user"],
-            room_name=self.room,
-            text=message
-        )
+        if msg_type == "chat_message":
+            message = text_data_json["message"]
 
-        # Broadcast to the group
-        await self.channel_layer.group_send(
-            self.room_group_name, 
-            {
-                "type": "chat_message", 
-                "message": {
-                    "id": msg.id,
-                    "user": {
-                        "id": self.scope["user"].id,
-                        "first_name": self.scope["user"].first_name,
-                        "last_name": self.scope["user"].last_name
-                    },
-                    "timestamp": str(msg.timestamp),
-                    "text": msg.text
+            # Save to DB
+            msg = await database_sync_to_async(Message.objects.create)(
+                user=self.scope["user"],
+                room_name=self.room,
+                text=message
+            )
+
+            # Broadcast to the group
+            await self.channel_layer.group_send(
+                self.room_group_name, 
+                {
+                    "type": "chat_message", 
+                    "message": {
+                        "id": msg.id,
+                        "user": {
+                            "id": self.scope["user"].id,
+                            "first_name": self.scope["user"].first_name,
+                            "last_name": self.scope["user"].last_name
+                        },
+                        "timestamp": str(msg.timestamp),
+                        "text": msg.text
+                    }
                 }
-            }
-        )
-
+            )
+        
+        elif msg_type == "typing":
+            # Broadcast typing message to the group
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "user_typing",
+                    "user_id": self.scope["user"].id,
+                    "first_name": self.scope["user"].first_name,
+                    "last_name": self.scope["user"].last_name,
+                }
+            )
+            
     # Receive message from room group
     async def chat_message(self, event):
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
+            "type": "message",
             "message": event['message']
+        }))
+
+    # Receive user typing message from room group
+    async def user_typing(self, event):
+
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({
+            "type": "typing",
+            "user": {
+                "id": event["user_id"],
+                "first_name": event["first_name"],
+                "last_name": event["last_name"],
+            },
         }))
