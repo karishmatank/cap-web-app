@@ -66,7 +66,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
         return () => {
             socket.close();
         }
-    }, [roomId]);
+    }, [roomId, currentUser.id]);
 
     /* Detect when a user is typing */
     const handleTyping = () => {
@@ -251,7 +251,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                             const textarea = textareaRef.current;
                             if (textarea) {
                                 textarea.style.height = "auto";
-                                textarea.style.height = `${textarea.scrollHeight}px`;
+                                textarea.style.height = `${textarea.scrollHeight - 20}px`;
                             }
                         }} 
                         placeholder="Type a message..."
