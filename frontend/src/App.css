@@ -1,6 +1,7 @@
 .app-container {
   display: flex;
-  height: 100%;
+  /* height: calc(100% - 56px); // Adjusts for navbar */
+  flex: 1; /* take remaining space below navbar */
   font-family: sans-serif;
   overflow: hidden;
 }
@@ -12,18 +13,6 @@
   overflow-y: auto;
   background-color: #f9f9f9;
 }
-
-.chat-window {
-  list-style: none;
-  padding-top: 1rem;
-  margin: 0;
-  flex-grow: 1;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 100vh;
-  overflow: hidden;
-}
-
 
 .room-info {
   width: 25%;
@@ -43,6 +32,12 @@
   margin: 16px 0 8px;
   font-weight: bold;
   font-style: italic;
+}
+
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .message {

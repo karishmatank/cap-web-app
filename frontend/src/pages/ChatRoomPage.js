@@ -338,7 +338,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                             const textarea = textareaRef.current;
                             if (textarea) {
                                 textarea.style.height = "auto";
-                                textarea.style.height = `${textarea.scrollHeight - 20}px`;
+                                textarea.style.height = `${textarea.scrollHeight + 2}px`;
                             }
                         }} 
                         placeholder="Type a message..."

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, matchPath, useNavi
 import Sidebar from './components/Sidebar';
 import RoomInfoSidebar from './components/RoomInfoSidebar';
 import ChatRoomPage from './pages/ChatRoomPage';
+import Navbar from './components/Navbar';
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { getCookie } from './utils/csrf';
@@ -68,13 +69,16 @@ function Layout() {
   
 
   return (
-    <div className="app-container">
-      <Sidebar rooms={rooms} newChat={newChat} />
-      <Routes>
-        <Route path="/chat/:roomId" element={<ChatRoomPage currentUser={currentUser} refreshRooms={fetchChatRooms} />} />
-        <Route path="*" element={<div className="chat-window no-chat-selected">Select a chat</div>} />
-      </Routes>
-      <RoomInfoSidebar roomId={roomId} refreshRooms={fetchChatRooms} />
+    <div className="main-wrapper">
+      <Navbar />
+      <div className="app-container">
+        <Sidebar rooms={rooms} newChat={newChat} />
+        <Routes>
+          <Route path="/chat/:roomId" element={<ChatRoomPage currentUser={currentUser} refreshRooms={fetchChatRooms} />} />
+          <Route path="*" element={<div className="chat-window no-chat-selected">Select a chat</div>} />
+        </Routes>
+        <RoomInfoSidebar roomId={roomId} refreshRooms={fetchChatRooms} />
+      </div>
     </div>
   );
 }
