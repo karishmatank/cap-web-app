@@ -20,6 +20,14 @@
   font-weight: bold;
 }
 
+.dropdown-menu {
+  position: absolute;
+  bottom: 3.5rem;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+
 .main-wrapper {
   display: flex;
   flex-direction: column;

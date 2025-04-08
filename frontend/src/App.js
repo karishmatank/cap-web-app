@@ -1,5 +1,5 @@
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, useLocation, matchPath, useNavigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, matchPath, useNavigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import RoomInfoSidebar from './components/RoomInfoSidebar';
 import ChatRoomPage from './pages/ChatRoomPage';
@@ -8,6 +8,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { getCookie } from './utils/csrf';
 import navLinks from './utils/navLinks';
+import useIsMobile from './hooks/useIsMobile';
 
 function Layout() {
   /* Get current user at start up */
@@ -93,7 +94,8 @@ function Layout() {
     };
 
   }, []);
-  
+
+  const isMobile = useIsMobile();
 
   return (
     <div className="main-wrapper">
@@ -133,14 +135,38 @@ function Layout() {
           <Sidebar rooms={rooms} newChat={newChat} />
 
           {/* Bottom: nav/profile button */}
-          <div className="pt-3 border-top">
-            <button 
-              className="btn btn-light w-100 text-start" 
-              data-bs-toggle="offcanvas" 
-              data-bs-target="#mobileNavBarOffcanvas"
-            >
-              Your Account & Links
-            </button>
+          <div className="mt-auto">
+            <div className="dropup w-100">
+              <button
+                className="btn btn-light w-100 dropdown-toggle"
+                type="button"
+                id="accountDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Your Account
+              </button>
+              <ul className="dropdown-menu w-100" aria-labelledby="accountDropdown">
+                {navLinks.map((link) => (
+                  <li key={link.path}>
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      {...(isMobile ? { 'data-bs-dismiss': "offcanvas" } : {})}
+                      onClick={() => {
+                        link.isReact ? (
+                          navigate(link.path)  
+                        ) : (
+                          window.location.href=link.path // Django link page refresh
+                        )
+                      }}
+                    >
+                      {link.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -160,34 +186,6 @@ function Layout() {
         </div>
         <div className="offcanvas-body">
           <RoomInfoSidebar roomId={roomId} refreshRooms={fetchChatRooms} />
-        </div>
-      </div>
-
-      {/* Offcanvas Mobile nav bar */}
-      <div
-        className="offcanvas offcanvas-start"
-        id="mobileNavBarOffcanvas"
-        data-bs-backdrop="true"
-        data-bs-scroll="false"
-        tabIndex="-1"
-      >
-        <div className="offcanvas-header">
-          <h5>Navigation</h5>
-          <button className="btn-close" data-bs-dismiss="offcanvas"></button>
-        </div>
-        <div className="offcanvas-body">
-          {/* This is what the nav bar shows on desktop */}
-          <ul className="list-group">
-            {navLinks.map((link) => (
-              <li className="list-item" key={link.path}>
-                {link.isReact ? (
-                  <Link className="text-decoration-none text-dark" to={link.path}>{link.name}</Link>
-                ) : (
-                  <a className="text-decoration-none text-dark" href={link.path}>{link.name}</a>
-                )}
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     </div>

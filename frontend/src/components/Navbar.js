@@ -30,8 +30,8 @@ function Navbar () {
                 ☰
             </button>
             <span className="navbar-brand m-0">Chat App</span>
-            <button className="btn btn-outline-info" data-bs-toggle="offcanvas" data-bs-target="#infoOffcanvas">
-                ℹ️
+            <button className="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#infoOffcanvas">
+                ⓘ
             </button>
         </nav>
         </>
