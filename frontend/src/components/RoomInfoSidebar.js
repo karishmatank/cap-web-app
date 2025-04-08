@@ -42,10 +42,10 @@ function RoomInfoSidebar({ roomId, refreshRooms }) {
     }, [searchQuery]);
 
     /* If the room hasn't loaded yet, just return a simple <div> */
-    if (!roomInfo) return <div className="room-info">No room selected</div>
+    if (!roomInfo) return <div className="room-info-content">No room selected</div>
 
     return (
-        <div className="room-info">
+        <div className="room-info-content">
             <h1>Room Info</h1>
             <div>
                 <h3><u>Room Name</u></h3>

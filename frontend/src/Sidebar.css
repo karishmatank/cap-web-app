@@ -20,6 +20,7 @@
 }
 
 .chat-room-card {
+    all: unset;
     display: block;
     padding: 0.75rem;
     border-radius: 8px;
