@@ -326,7 +326,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                     setNewMessage("");
                 }}>
                     <textarea
-                        autofocus
+                        autoFocus
                         ref={textareaRef}
                         className="message-textarea" 
                         value={newMessage} 

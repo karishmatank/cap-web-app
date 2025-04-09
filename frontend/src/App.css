@@ -77,6 +77,10 @@
   overflow-y: auto;
 }
 
+.room-info-content div.card {
+  margin-bottom: 20px;
+}
+
 .sidebar {
   width: 22%;
   border-right: 1px solid #ccc;
@@ -96,4 +100,9 @@
   color: #aaa;
   align-content: center;
   margin-right: 10px;
+}
+
+.update-buttons {
+  padding: 1.5rem;
+  display: flex;
 }
