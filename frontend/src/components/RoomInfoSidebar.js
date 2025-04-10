@@ -67,7 +67,7 @@ function RoomInfoSidebar({ roomId, refreshRooms }) {
     return (
         <div className="room-info-content">
             <div className="card p-4 shadow-sm rounded-3">
-                <h4 className="mb-0 fw-semibold">Room Name</h4>
+                <h4 className="mb-2 fw-semibold">Room Name</h4>
                 {
                     isEditing ? (
                         <form onSubmit={(event) => {
@@ -100,26 +100,27 @@ function RoomInfoSidebar({ roomId, refreshRooms }) {
                                 onChange={(event) => (
                                     setRoomName(event.target.value)
                                 )}
-                                style={{ marginLeft: "0.5rem" }}
+                                // style={{ marginLeft: "0.5rem" }}
+                                className="form-control mb-2"
                             />
-                            <button 
-                                type="submit" 
-                                style={{ marginLeft: "0.5rem" }}
-                                className="btn btn-outline-secondary btn-sm"
-                            >
-                                Save
-                            </button>
-                            <button 
-                                type="button" 
-                                style={{ marginLeft: "0.5rem" }}
-                                onClick={() => {
-                                    setRoomName(roomInfo.name);
-                                    setIsEditing(false);
-                                }}
-                                className="btn btn-outline-secondary btn-sm"
-                            >
-                                Cancel
-                            </button>
+                            <div className="update-buttons">
+                                <button 
+                                    type="submit"
+                                    className="btn btn-outline-secondary btn-sm"
+                                >
+                                    Save
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        setRoomName(roomInfo.name);
+                                        setIsEditing(false);
+                                    }}
+                                    className="btn btn-outline-secondary btn-sm"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </form>
                     ) : (
                         // View only mode
@@ -210,7 +211,7 @@ function RoomInfoSidebar({ roomId, refreshRooms }) {
                     </div>
                     <div className="update-buttons">
                         <button
-                            className="btn btn-dark w-100"
+                            className="btn btn-dark btn-sm"
                             onClick={() => {
                                 axios.patch(`/chat/api/chats/${roomId}/update/`, {
                                     'members': desiredMembers.map((m) => m.id)
@@ -232,7 +233,7 @@ function RoomInfoSidebar({ roomId, refreshRooms }) {
                             Update
                         </button>
                         <button
-                            className="btn btn-outline-secondary w-100"
+                            className="btn btn-outline-secondary btn-sm"
                             onClick={() => {
                                 setDesiredMembers(roomInfo.members);
                                 setSearchQuery("");

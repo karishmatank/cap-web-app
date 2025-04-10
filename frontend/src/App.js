@@ -9,11 +9,14 @@ import { useEffect, useState } from "react";
 import { getCookie } from './utils/csrf';
 import navLinks from './utils/navLinks';
 import useIsMobile from './hooks/useIsMobile';
+import { Offcanvas } from 'bootstrap';
 
 function Layout() {
   /* Get current user at start up */
 
   const [currentUser, setCurrentUser] = useState(null);
+
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     axios.get("/users/api/me/")
@@ -63,6 +66,16 @@ function Layout() {
         const newRoomId = response.data.id;
         fetchChatRooms();
         navigate(`/chat/${newRoomId}`);
+
+        // If we're on mobile, close the current sidebar offcanvas and open up the room info offcanvas
+        if (isMobile) {
+          // Wait for sidebar offcanvas to close before triggering the room info offcanvas to open
+          setTimeout(() => {
+            const infoSidebarEl = document.getElementById("infoOffcanvas");
+            const infoSidebar = Offcanvas.getOrCreateInstance(infoSidebarEl);
+            infoSidebar.show();
+          }, 300);
+        }
     })
     .catch((error) => {
         console.error("Error creating new room", error);
@@ -94,8 +107,6 @@ function Layout() {
     };
 
   }, []);
-
-  const isMobile = useIsMobile();
 
   return (
     <div className="main-wrapper">

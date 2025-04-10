@@ -324,6 +324,12 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                     );
 
                     setNewMessage("");
+
+                    // Auto resize the textarea
+                    const textarea = textareaRef.current;
+                    if (textarea) {
+                        textarea.style.height = "auto";
+                    }
                 }}>
                     <textarea
                         autoFocus

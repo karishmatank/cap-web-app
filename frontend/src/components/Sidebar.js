@@ -12,7 +12,11 @@ function Sidebar({ rooms, newChat }) {
     
     return (
         <div className="sidebar-content">
-            <button className="new-chat-btn" onClick={newChat}>
+            <button 
+                className="new-chat-btn" 
+                onClick={newChat}
+                {...(isMobile ? { 'data-bs-dismiss': "offcanvas" } : {})} // Closes the offcanvas if button is pressed
+            >
                 + New Chat
             </button>
             <div className="chat-room-list">

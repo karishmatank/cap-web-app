@@ -103,6 +103,12 @@
 }
 
 .update-buttons {
-  padding: 1.5rem;
+  padding-top: 0.5rem;
   display: flex;
+  width: 100%
+}
+
+.update-buttons button {
+  flex: 1 1 0; /* Allows buttons to shrink or grow equally */
+  min-width: 0;
 }
