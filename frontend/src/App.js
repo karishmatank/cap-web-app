@@ -9,24 +9,13 @@ import { useEffect, useState } from "react";
 import { getCookie } from './utils/csrf';
 import navLinks from './utils/navLinks';
 import useIsMobile from './hooks/useIsMobile';
+import useCurrentUser from './hooks/useCurrentUser';
 import { Offcanvas } from 'bootstrap';
 
 function Layout() {
   /* Get current user at start up */
-
-  const [currentUser, setCurrentUser] = useState(null);
-
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    axios.get("/users/api/me/")
-    .then((response) => {
-      setCurrentUser(response.data);
-    })
-    .catch((error) => {
-      console.error("Not logged in", error)
-    });
-  }, []);
+  const { currentUser, loading } = useCurrentUser();
 
   /* Match current route against /chat/:roomId to get the roomId */
   const location = useLocation();
@@ -107,6 +96,19 @@ function Layout() {
     };
 
   }, []);
+
+  /* Check that there is a currentUser (user is authenticated) 
+  Need to keep this for last because otherwise React freaks out about hooks not running in the same order every render
+  given the if statements below*/
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!currentUser) {
+    // Redirect user to login. Using localhost:8000 for now
+    window.location.href = 'http://localhost:8000/users/login/?next=' + window.location.pathname;
+    return null;
+  }
 
   return (
     <div className="main-wrapper">
