@@ -1,0 +1,20 @@
+<!-- Desktop nav bar, duplicate of frontend/src/components/Navbar.js -->
+<!-- Because we have core/context_processors.py and linked it in settings.py, we can use nav_links-->
+<nav class="navbar sticky-top navbar-expand-md navbar-dark bg-dark">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <span class="navbar-brand">CAP Web App</span>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                {% for link in nav_links %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ link.path }}">{{ link.name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</nav>

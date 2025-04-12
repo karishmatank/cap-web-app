@@ -1,0 +1,4 @@
+[
+    { "name": "Chat", "path": "http://localhost:3000/", "isReact": true },
+    { "name": "Profile", "path": "http://localhost:8000/users/", "isReact": false }
+]
