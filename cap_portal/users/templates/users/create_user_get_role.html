@@ -1,20 +1,26 @@
-{% extends "users/layout.html" %}
+{% extends "users/new_user_signup_layout.html" %}
 
 {% block body %}
-    <form action="{% url 'users:create_user_get_role' %}" method="post">
-        {% csrf_token %}
-        <select name="role" required>
-            <option value="" disabled selected>Select</option>
-            {% for value, label in roles %}
-                <option value="{{ value }}">{{ label }}</option>
-            {% endfor %}
-        </select>
-        <input type="submit">
-    </form>
+    <main class="form-signin w-100 m-auto"> 
+        <h1 class="h3 mb-3 fw-normal">Create new user</h1>
+        <form action="{% url 'users:create_user_get_role' %}" method="post">
+            {% csrf_token %}
+            <div class="form-floating">
+                <select class="form-select" name="role" id="select_role" required>
+                    <option value="" disabled selected>Select</option>
+                    {% for value, label in roles %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <label for="select_role">Select your role</label>
+            </div>
+            <button class="btn btn-primary w-100 py-2" type="submit">Submit</button>
+        </form>
 
-    {% if message %}
-        <div>{{ message }}</div>
-    {% endif %}
+        {% if message %}
+            <div class="alert alert-warning" role="alert">{{ message }}</div>
+        {% endif %}
 
-    <a href="{% url 'users:login' %}">Back to Login</a>
+        <a href="{% url 'users:login' %}">Back to Login</a>
+    </main>
 {% endblock %}

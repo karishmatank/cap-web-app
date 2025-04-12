@@ -1,0 +1,12 @@
+.custom-select {
+    padding-top: 0.625rem;
+    min-height: calc(2.5rem + calc(var(--bs-border-width)* 2));
+}
+
+.form-signin input#email {
+    margin-bottom: 10px;
+}
+
+.form-signin input#password {
+    margin-bottom: 0px;
+}

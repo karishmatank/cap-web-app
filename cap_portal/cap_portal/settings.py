@@ -162,3 +162,10 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# Trusted origins
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://localhost:3000',
+    'https://my-future-production-domain.com' # TODO: Fix this once in production
+]
