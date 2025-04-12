@@ -1,5 +1,5 @@
 import { useEffect, useState, React } from 'react';
-import axios from "axios";
+import axios from "../utils/axios";
 import { Link } from 'react-router-dom';
 // import navLinks from '../utils/navLinks';
 
@@ -17,6 +17,17 @@ function Navbar () {
         });
     }, []);
 
+    // Handle post request for logout
+    const handleLogout = () => {
+        axios.post("/users/logout/")
+        .then(() => {
+            window.location.href = 'http://localhost:8000/users/login/'
+        })
+        .catch((error) => {
+            console.log("Error logging out", error);
+        });
+    }
+
     return (
         <>
         <nav className="navbar sticky-top navbar-expand-md navbar-dark bg-dark d-none d-md-flex">
@@ -32,8 +43,18 @@ function Navbar () {
                             <li className="nav-item" key={link.path}>
                                 {link.isReact ? (
                                     <Link className="nav-link" to={link.path}>{link.name}</Link>
-                                ) : (
+                                ) : link.method === 'get' ? (
                                     <a className="nav-link" href={link.path}>{link.name}</a>
+                                ) : (
+                                    <button 
+                                        onClick={(event) => {
+                                            event.preventDefault(); // Prevent get request
+                                            handleLogout();
+                                        }} 
+                                        className="nav-link"
+                                    >
+                                        {link.name}
+                                    </button>
                                 )}
                             </li>
                         ))}

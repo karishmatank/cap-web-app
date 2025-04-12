@@ -1,4 +1,5 @@
 [
-    { "name": "Chat", "path": "http://localhost:3000/", "isReact": true },
-    { "name": "Profile", "path": "http://localhost:8000/users/", "isReact": false }
+    { "name": "Home", "path": "http://localhost:8000/users/", "isReact": false, "method": "get" },
+    { "name": "Chat", "path": "http://localhost:3000/", "isReact": true, "method": "get" },
+    { "name": "Logout", "path": "http://localhost:8000/users/logout/", "isReact": false, "method": "post" }
 ]

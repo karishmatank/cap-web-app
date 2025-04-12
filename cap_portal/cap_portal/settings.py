@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'chat',
     'core',
     'rest_framework',
+    'widget_tweaks',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
