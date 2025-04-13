@@ -2,10 +2,10 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.auth.views import logout_then_login
+from django.contrib.auth.views import logout_then_login, PasswordChangeView
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 
 from .models import UserProfile, ROLE_CHOICES
 
@@ -14,6 +14,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 # Create your views here.
+class CustomPasswordChangeView(PasswordChangeView):
+    success_url = reverse_lazy("users:index")
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Your password was updated successfully.')
+
+        # We don't need to call form.save() etc because we are returning form valid from super()
+        # FormView calls form.save() for us as well as update_session_auth_hash
+        return super().form_valid(form)
+
 
 def create_user_get_role(request):
     if request.method == "POST":

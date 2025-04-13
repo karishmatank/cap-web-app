@@ -21,18 +21,17 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     
     # Password management views
-    path("change-password/", auth_views.PasswordChangeView.as_view(
+    path("change-password/", views.CustomPasswordChangeView.as_view(
         template_name="users/change_password.html", 
-        success_url=reverse_lazy('users:change_password_success')
     ), name="change_password"),
 
-    path("change-password/success/", auth_views.PasswordChangeDoneView.as_view(
-        template_name="users/change_password_successful.html"
-    ), name="change_password_success"),
+    # path("change-password/success/", auth_views.PasswordChangeDoneView.as_view(
+    #     template_name="users/change_password_successful.html"
+    # ), name="change_password_success"),
 
     # Password reset views
     path('reset-password/', auth_views.PasswordResetView.as_view(
-        template_name="users/change_password.html",
+        template_name="users/reset_password.html",
         email_template_name="users/reset_password_email.html", 
         success_url=reverse_lazy('users:reset_password_email_sent')
     ), name="reset_password"),
