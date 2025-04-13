@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.auth.views import logout_then_login, PasswordChangeView
+from django.contrib.auth.views import logout_then_login, PasswordChangeView, PasswordResetView, PasswordResetConfirmView
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
@@ -24,6 +24,19 @@ class CustomPasswordChangeView(PasswordChangeView):
         # FormView calls form.save() for us as well as update_session_auth_hash
         return super().form_valid(form)
 
+class CustomPasswordResetView(PasswordResetView):
+    success_url = reverse_lazy("users:login")
+
+    def form_valid(self, form):
+        messages.success(self.request, "If you have a valid account, you'll receive an email with password reset instructions shortly.")
+        return super().form_valid(form)
+    
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    success_url = reverse_lazy("users:login")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Your password has been reset successfully.")
+        return super().form_valid(form)
 
 def create_user_get_role(request):
     if request.method == "POST":
