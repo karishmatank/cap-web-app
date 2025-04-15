@@ -2,19 +2,25 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import logout_then_login, PasswordChangeView, PasswordResetView, PasswordResetConfirmView
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 
 from .models import UserProfile, ROLE_CHOICES
+from .serializers import UserProfileSerializer
 
+from rest_framework import generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from datetime import datetime
+
 # Create your views here.
-class CustomPasswordChangeView(PasswordChangeView):
+class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
     success_url = reverse_lazy("users:index")
 
     def form_valid(self, form):
@@ -123,6 +129,50 @@ def index(request):
 def logout_view(request):
     return logout_then_login(request)
 
+# User profile edit
+@login_required
+def edit_profile(request):
+    # Get the existing user profile object, which was created when the user signed up
+    profile = UserProfile.objects.get(user__id=request.user.id)
+
+    if request.method == 'POST':
+        # For all users, we fill interest and other info
+        profile.interests = request.POST["interests"]
+        profile.other = request.POST["other"]
+        
+        # If the user is a mentee, we need to fill graduation year as well
+        if profile.role == 'mentee':
+            try:
+                graduation_year = int(request.POST['graduation_year'])
+            except ValueError:
+                messages.error(request, "Please enter an integer.")
+                return HttpResponseRedirect(reverse("users:edit_profile"))
+            
+            # Check that year provided isn't nonsensical
+            current_year = datetime.now().year
+            if graduation_year > (current_year + 2):
+                messages.error(request, "Please enter a valid graduation year.")
+                return HttpResponseRedirect(reverse("users:edit_profile"))
+            
+            profile.graduation_year = graduation_year
+
+        # If the user is a mentor, we need to fill college, majors, and experience as well
+        if profile.role == 'mentor':
+            profile.college_attended = request.POST['college_attended']
+            profile.college_major = request.POST['college_major']
+            profile.experience = request.POST['experience']
+
+        profile.save()
+
+        messages.success(request, "Profile updated!")
+
+        return HttpResponseRedirect(reverse("users:edit_profile"))
+
+    return render(request, "users/edit_profile.html", {
+        'profile': profile,
+    })
+
+
 # API to get current user for React
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -137,7 +187,7 @@ def get_current_user(request):
 # Search for users
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def search_users(request):
+def search_users_by_name(request):
     query = request.GET.get("q", "")
     users = User.objects.filter(first_name__icontains=query)[:10]
 
@@ -151,3 +201,31 @@ def search_users(request):
     ]
 
     return Response(data)
+
+# Get list of queried users for the community page
+class CommunityDirectoryListView(generics.ListAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = UserProfile.objects.all()
+
+        # Queries based on keyword (name, interest, etc)
+        query = self.request.GET.get('q')
+        role = self.request.GET.get('role')  # Mentor vs mentee, etc
+
+        if query:
+            queryset = queryset.filter(
+                Q(user__first_name__icontains=query) |
+                Q(user__last_name__icontains=query) |
+                Q(interests__icontains=query) |
+                Q(college_attended__icontains=query) |
+                Q(college_major__icontains=query) |
+                Q(experience__icontains=query) |
+                Q(other__icontains=query)
+            )
+        
+        if role:
+            queryset = queryset.filter(role=role)
+        
+        return queryset
