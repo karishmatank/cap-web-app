@@ -11,13 +11,17 @@ function DirectoryResults({ results, currentUser }) {
                             <h5 className='card_title mb-1 d-flex align-items-center'>
                                 {result.user.first_name} {result.user.last_name}
                                 <span
-                                    className={`badge ${result.role === 'mentor' ? 'bg-primary' : 'bg-success'} text-capitalize ms-2`}
+                                    className={`badge ${
+                                        result.role === 'mentor' ? ('bg-primary') 
+                                        : result.role === 'mentee' ? ('bg-success') 
+                                        : ('bg-warning')
+                                    } text-capitalize ms-2`}
                                 >
                                     {result.role}
                                 </span>
                             </h5>
                             
-                            <div className='mt-2 mt-md-0'>
+                            <div className='mt-0'>
                                 <button
                                     className='btn btn-outline-primary'
                                     type='button'

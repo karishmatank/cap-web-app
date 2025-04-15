@@ -32,6 +32,7 @@
                         <label for="graduation_year">Graduation Year</label>
                     </div>
                 </div>
+                <hr>
             {% elif profile.role == 'mentor' %}
                 <div class="mb-3">
                     <div class="form-floating">
@@ -63,6 +64,7 @@
                         <label for="experience">Professional Experience</label>
                     </div>
                 </div>
+                <hr>
             {% endif %}
             <div class="mb-3">
                 <div class="form-floating">
@@ -70,12 +72,11 @@
                     <label for="interests">Professional / Personal Interests</label>
                 </div>
                 <div class="form-floating">
-                    <textarea class="form-control" id="other" autocomplete="off" name="other" required style="min-height: 120px; padding-top: 3rem">{{ profile.other }}</textarea>
-                    <label className="d-block" for="other" aria-describedby="other-description">
+                    <textarea class="form-control" id="other" autocomplete="off" name="other" required style="min-height: 150px; padding-top: 4.5rem">{{ profile.other }}</textarea>
+                    <label className="d-block" for="other" aria-describedby="other-description" style="width: 100%; white-space: normal;">
                         <div>Other Comments</div>
-                        <small id="other-description" class="form-text text-muted">What are you looking forward to during your time in CAP? Anything else to share?</small>
+                        <small id="other-description" className="form-text text-muted">What are you looking forward to during your time in CAP? Anything else you'd like to share?</small>
                     </label>
-                    
                 </div>
             </div>
             <button type="submit" class="btn btn-primary w-100">Save</button>

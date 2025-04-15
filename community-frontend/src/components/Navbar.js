@@ -29,14 +29,14 @@ function Navbar () {
 
     return (
         <>
-        <nav className="navbar sticky-top navbar-expand-md navbar-dark bg-dark d-none d-md-flex">
+        <nav className="navbar sticky-top navbar-expand-md navbar-dark bg-dark">
             <div className="container-fluid">
-                <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMainCommunity">
                     <span className="navbar-toggler-icon"></span>
                 </button>
                 <span className="navbar-brand">CAP Web App</span>
 
-                <div className="collapse navbar-collapse" id="navbarMain">
+                <div className="collapse navbar-collapse" id="navbarMainCommunity">
                     <ul className="navbar-nav me-auto mb-2 mb-md-0">
                         {links.map((link) => (
                             <li className="nav-item" key={link.path}>

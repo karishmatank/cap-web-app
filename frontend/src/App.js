@@ -7,7 +7,7 @@ import Navbar from './components/Navbar';
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { getCookie } from './utils/csrf';
-import navLinks from './utils/navLinks';
+// import navLinks from './utils/navLinks';
 import useIsMobile from './hooks/useIsMobile';
 import useCurrentUser from './hooks/useCurrentUser';
 import { Offcanvas } from 'bootstrap';
@@ -148,7 +148,7 @@ function Layout() {
           <Sidebar rooms={rooms} newChat={newChat} />
 
           {/* Bottom: nav/profile button */}
-          <div className="mt-auto">
+          {/* <div className="mt-auto">
             <div className="dropup w-100">
               <button
                 className="btn btn-light w-100 dropdown-toggle"
@@ -180,7 +180,7 @@ function Layout() {
                 ))}
               </ul>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

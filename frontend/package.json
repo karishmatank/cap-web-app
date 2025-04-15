@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.8.4",
     "bootstrap": "^5.3.5",
+    "bootstrap-icons": "^1.11.3",
     "date-fns": "^4.1.0",
     "emoji-picker-react": "^4.12.2",
     "react": "^19.1.0",
