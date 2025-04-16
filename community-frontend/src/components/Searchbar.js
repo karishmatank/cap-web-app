@@ -13,7 +13,7 @@ function Searchbar({ setQuery, setRole }) {
                         setQuery(event.target.value);
                     }}
                 />
-                <div class="form-floating">
+                <div className="form-floating">
                     <select
                         className='form-select'
                         style={{ maxWidth: '150px' }}

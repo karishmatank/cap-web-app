@@ -9,7 +9,8 @@ function Navbar () {
     const [links, setLinks] = useState([]);
     const collapseRef = useRef(null);
     const collapseInstanceRef = useRef(null);
-
+    const [openDropdown, setOpenDropdown] = useState(null);
+    
     useEffect(() => {
         axios.get("/core/api/nav_links/")
         .then((response) => {
@@ -43,6 +44,23 @@ function Navbar () {
         }
     };
 
+    // Manually trigger dropdowns
+    const toggleDropdown = (name) => {
+        setOpenDropdown((prev) => (prev === name ? null : name));
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            const isDropdownClick = e.target.closest('.dropdown');
+            if (!isDropdownClick) {
+                setOpenDropdown(null);
+            }
+        };
+        
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
     return (
         <nav className="navbar sticky-top navbar-expand-md navbar-dark bg-dark">
             <div className="container-fluid">
@@ -72,25 +90,54 @@ function Navbar () {
                 {/* Navbar */}
                 <div className="collapse navbar-collapse" id="navbarMainChat" ref={collapseRef}>
                     <ul className="navbar-nav me-auto mb-2 mb-md-0">
-                        {links.map((link) => (
-                            <li className="nav-item" key={link.path}>
-                                {link.isReact ? (
-                                    <Link className="nav-link" to={link.path}>{link.name}</Link>
-                                ) : link.method === 'get' ? (
-                                    <a className="nav-link" href={link.path}>{link.name}</a>
-                                ) : (
-                                    <button 
-                                        onClick={(event) => {
-                                            event.preventDefault(); // Prevent get request
-                                            handleLogout();
-                                        }} 
-                                        className="nav-link"
+                        {links.map((link) => 
+                            link.children ? (
+                                <li className="nav-item dropdown" style={{ position: 'relative' }} key={link.path}>
+                                    <a 
+                                        className={`nav-link dropdown-toggle ${openDropdown === link.name ? 'show' : ''}`} 
+                                        href="#!" 
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation(); // prevent bubbling
+                                            toggleDropdown(link.name);
+                                        }}
+                                        role="button"
+                                        aria-expanded={openDropdown === link.name}
                                     >
                                         {link.name}
-                                    </button>
-                                )}
-                            </li>
-                        ))}
+                                    </a>
+                                    <ul className={`dropdown-menu ${openDropdown === link.name ? 'show' : ''}`}>
+                                        {link.children.map((child) => (
+                                            <li key={child.path}>
+                                                {child.isReact ? (
+                                                    <Link className="dropdown-item" to={child.path}>{child.name}</Link>
+                                                ) : (
+                                                    <a className="dropdown-item" href={child.path}>{child.name}</a>
+                                                )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </li>
+                            ) : (
+                                <li className="nav-item" key={link.path}>
+                                    {link.isReact ? (
+                                        <Link className="nav-link" to={link.path}>{link.name}</Link>
+                                    ) : link.method === 'get' ? (
+                                        <a className="nav-link" href={link.path}>{link.name}</a>
+                                    ) : (
+                                        <button 
+                                            onClick={(event) => {
+                                                event.preventDefault(); // Prevent get request
+                                                handleLogout();
+                                            }} 
+                                            className="nav-link"
+                                        >
+                                            {link.name}
+                                        </button>
+                                    )}
+                                </li>
+                            )
+                        )}
                     </ul>
                 </div>
             </div>

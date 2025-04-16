@@ -1,7 +1,14 @@
 [
     { "name": "Home", "path": "http://localhost:8000/users/", "isReact": false, "method": "get" },
     { "name": "Chat", "path": "http://localhost:3000/", "isReact": true, "method": "get" },
-    { "name": "Community", "path": "http://localhost:3001/", "isReact": true, "method": "get" },
-    { "name": "Edit Profile", "path": "http://localhost:8000/users/edit-profile/", "isReact": false, "method": "get"},
+    { "name": "CAP", "children": [
+        { "name": "Directory", "path": "http://localhost:3001/", "isReact": true, "method": "get" },
+        { "name": "Session Materials", "path": "#", "isReact": false, "method": "get"}
+    ]},
+    { "name": "Applications", "path": "#", "isReact": false, "method": "get"},
+    { "name": "Settings", "children": [
+        { "name": "Change Password", "path": "http://localhost:8000/users/change-password/", "isReact": false, "method": "get" },
+        { "name": "Edit Profile", "path": "http://localhost:8000/users/edit-profile/", "isReact": false, "method": "get"}
+    ]},
     { "name": "Logout", "path": "http://localhost:8000/users/logout/", "isReact": false, "method": "post" }
 ]

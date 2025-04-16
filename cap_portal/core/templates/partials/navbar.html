@@ -10,16 +10,37 @@
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav me-auto mb-2 mb-md-0">
                 {% for link in nav_links %}
-                    <li class="nav-item">
-                        {% if link.method == "get" %}
-                            <a class="nav-link" href="{{ link.path }}">{{ link.name }}</a>
-                        {% elif link.method == "post" %}
-                            <form action="{{ link.path }}" method="post">
-                                {% csrf_token %}
-                                <button type="submit" class="nav-link">{{ link.name }}</button>
-                            </form>
-                        {% endif %}
-                    </li>
+                    {% if link.children %}
+                        <li class="nav-item dropdown">
+                            <a 
+                                class="nav-link dropdown-toggle"
+                                href="#" 
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            >
+                                {{ link.name }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    {% for child in link.children %}
+                                        <a class="dropdown-item" href="{{ child.path }}">{{ child.name }}</a>
+                                    {% endfor %}
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            {% if link.method == "get" %}
+                                <a class="nav-link" href="{{ link.path }}">{{ link.name }}</a>
+                            {% elif link.method == "post" %}
+                                <form action="{{ link.path }}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="nav-link">{{ link.name }}</button>
+                                </form>
+                            {% endif %}
+                        </li>
+                    {% endif %}
                 {% endfor %}
             </ul>
         </div>
