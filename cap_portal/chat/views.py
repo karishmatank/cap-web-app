@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -167,3 +168,37 @@ def room_info(request, room_id):
     
     serializer = ChatRoomSerializer(room)
     return Response(serializer.data)
+
+# Get room id if a chat already exists between two user IDs, otherwise create new room and return id
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def start_private_chat(request):
+    # Get the target user id
+    target_user_id = request.data.get('target_user_id')
+    if not target_user_id:
+        return Response({"error": "No target user ID supplied."}, status=400)
+
+    target_user = User.objects.get(id=target_user_id)
+    if not target_user:
+        return Response({"error": "Target user ID is invalid."}, status=400)
+
+    if target_user.id == request.user.id:
+        return Response({"error": "Can't start a chat with yourself."}, status=400)
+    
+    # Try to find a room with just the two members
+    existing_room = ChatRoom.objects.annotate(
+        num_users=Count('members')
+    ).filter(
+        num_users=2,
+        members=target_user
+    ).filter(
+        members=request.user
+    ).first()
+
+    if existing_room:
+        return Response({'room_id': existing_room.id})
+    
+    # Otherwise, create a new room. Auto add the creator and target user
+    new_room = ChatRoom.objects.create()
+    new_room.members.add(request.user, target_user)
+    return Response({'room_id': new_room.id})

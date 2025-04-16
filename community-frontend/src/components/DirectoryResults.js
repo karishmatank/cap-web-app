@@ -1,6 +1,40 @@
 import React from 'react';
+import axios from '../utils/axios'
+import { useState, useRef } from "react";
+import { Modal } from 'bootstrap';
 
 function DirectoryResults({ results, currentUser }) {
+    const [targetUser, setTargetUser] = useState(null);
+    const modalRef = useRef(null);
+
+    const openModal = (user) => {
+        setTargetUser(user);
+
+        // Show modal using Bootstrap JS API
+        const modal = new Modal(modalRef.current);
+        modal.show();
+    }
+
+    const handlePrivateChat = () => {
+        axios.post('chat/api/chats/start_private_chat/', {
+            'target_user_id': targetUser.id,
+        })
+        .then((response) => {
+            // Navigate to the newly created chat room
+            const roomId = response.data.room_id;
+
+            // Redirect to the chat room
+            window.location.href = `http://localhost:3000/chat/${roomId}/`;
+
+            // In production
+            // window.location.href = `/chat/${roomId}/`;
+        })
+        .catch((error) => {
+            console.error("Error creating private chat", error);
+            alert("Something went wrong while starting the chat.");
+        });
+    };
+
     return (
         <div className="query-results container mt-4 ">
             {results.map((result) => (
@@ -26,6 +60,7 @@ function DirectoryResults({ results, currentUser }) {
                                     className='btn btn-outline-primary'
                                     type='button'
                                     disabled={result.user.id === currentUser.id}
+                                    onClick={() => openModal(result.user)}
                                 >
                                     Start Chat
                                 </button>
@@ -55,6 +90,33 @@ function DirectoryResults({ results, currentUser }) {
                     </div>
                 </div>
             ))}
+
+            {/* Modal */}
+            <div className='modal fade' tabIndex="-1" ref={modalRef} aria-labelledby='startChatModalLabel' aria-hidden="true">
+                <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title" id="startChatModalLabel">Start Chat</h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" />
+                        </div>
+                        <div className="modal-body">
+                            {targetUser && (
+                                <p>
+                                    Start a new chat with <strong>{targetUser.first_name} {targetUser.last_name}</strong>?
+                                </p>
+                            )}
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-primary" onClick={handlePrivateChat}>
+                                Start Chat
+                            </button>
+                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

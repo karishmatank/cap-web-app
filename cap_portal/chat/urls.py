@@ -14,4 +14,5 @@ urlpatterns = [
     path('api/chats/create/', views.create_new_room, name="create_new_room"),
     path('api/chats/<int:room_id>/info/', views.room_info, name="room_info"),
     path('api/chats/<int:room_id>/update/', views.update_room, name="update_room"),
+    path('api/chats/start_private_chat/', views.start_private_chat, name="start_private_chat")
 ]
