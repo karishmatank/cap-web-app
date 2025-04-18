@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'users',
     'chat',
     'core',
+    'workshops',
     'rest_framework',
     'widget_tweaks',
     'django.contrib.admin',

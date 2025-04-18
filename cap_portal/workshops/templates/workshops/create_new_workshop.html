@@ -1,0 +1,79 @@
+{% extends "workshops/layout.html" %}
+
+{% block title %}
+    CAP - Create New Workshop
+{% endblock %}
+
+{% block body %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="container mt-5" style="max-width: 750px;">
+        <h1 class="mb-4">Create New Workshop</h1>
+        <form action="{% url 'workshops:create_workshop_material' %}" method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <div class="form-floating">
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="new-workshop-name"
+                        name="new-workshop-name"
+                        autocomplete="off"
+                        autofocus
+                        required
+                    >
+                    <label for="new-workshop-name">Name (i.e. Session #1: <b>[Name]</b>)</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="form-floating">
+                    <input 
+                        type="number" 
+                        class="form-control" 
+                        id="new-workshop-number"
+                        name="new-workshop-number"
+                        autocomplete="off"
+                        required
+                    >
+                    <label for="new-workshop-number">Workshop Number (i.e. Session #<b>[Number]</b>: Interviews)</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="form-floating">
+                    <textarea 
+                        class="form-control" 
+                        id="new-workshop-description" 
+                        autocomplete="off" 
+                        name="new-workshop-description" 
+                        required 
+                        style="min-height: 120px;"
+                    ></textarea>
+                    <label for="new-workshop-description">Description</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="new-workshop-google-doc-url" style="font-size: 14px; margin-left: 13px; color: grey;">Google Docs URL</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="google-docs-link-format">https://docs.google.com/document/d/</span>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="new-workshop-google-doc-url"
+                        name="new-workshop-google-doc-url"
+                        autocomplete="off"
+                        aria-describedby="google-docs-link-format"
+                    >
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100">Create</button>
+        </form>
+    </div>
+{% endblock %}

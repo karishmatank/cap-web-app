@@ -3,7 +3,7 @@
     { "name": "Chat", "path": "http://localhost:3000/", "isReact": true, "method": "get" },
     { "name": "CAP", "children": [
         { "name": "Directory", "path": "http://localhost:3001/", "isReact": true, "method": "get" },
-        { "name": "Session Materials", "path": "#", "isReact": false, "method": "get"}
+        { "name": "Workshop Materials", "path": "#", "isReact": false, "method": "get"}
     ]},
     { "name": "Applications", "path": "#", "isReact": false, "method": "get"},
     { "name": "Settings", "children": [
