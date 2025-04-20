@@ -1,0 +1,52 @@
+{% extends "workshops/layout.html" %}
+
+{% block title %}
+    CAP - Workshop #{{ workshop.number }}: {{ workshop.name }}
+{% endblock %}
+
+{% block body %}
+    <div class="container my-3">
+        <div class="row justify-content-center">
+            <div class="w-100 w-md-75 w-lg-75 w-xl-75 mx-auto">
+                <!-- Card wrapper-->
+                <div class="card">
+                    <div class="card-body">
+                        <!--Title-->
+                        <h2 class="card-title">Workshop #{{ workshop.number }}: {{ workshop.name }}</h2>
+
+                        <!--If we decide to add tags in the future-->
+                        {% if tags %}
+                            {% for tag in tags %}
+                                <span class="badge bg-secondary me-1">{{ tag }}</span>
+                            {% endfor %}
+                        {% endif %}
+
+                        <!--Description-->
+                        <p class="card-text mt-3">{{ workshop.description }}</p>
+
+                        <!--Make a copy button-->
+                        <a
+                            href="https://docs.google.com/document/d/{{ workshop.google_doc_id }}/copy"
+                            target="_blank"
+                            class="btn btn-outline-primary"
+                        >
+                            Make a Copy
+                        </a>
+
+                        <!--Embedded Google Doc-->
+                        <div class="ratio ratio-4x3 mb-3" style="min-height: 400px;">
+                            <iframe
+                                src="https://docs.google.com/document/d/{{ workshop.google_doc_id }}/preview"
+                                allow="autoplay"
+                                allowfullscreen
+                                style="border: none;"   
+                            ></iframe>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

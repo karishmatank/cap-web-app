@@ -1,7 +1,7 @@
 {% extends "workshops/layout.html" %}
 
 {% block title %}
-    CAP - Create New Workshop
+    CAP - {{ form_title }}
 {% endblock %}
 
 {% block body %}
@@ -15,8 +15,8 @@
     {% endif %}
 
     <div class="container mt-5" style="max-width: 750px;">
-        <h1 class="mb-4">Create New Workshop</h1>
-        <form action="{% url 'workshops:create_workshop_material' %}" method="post">
+        <h1 class="mb-4">{{ form_title }}</h1>
+        <form action="{{ form_action_url }}" method="post">
             {% csrf_token %}
             <div class="mb-3">
                 <div class="form-floating">
@@ -25,6 +25,7 @@
                         class="form-control" 
                         id="new-workshop-name"
                         name="new-workshop-name"
+                        value="{{ workshop.name|default_if_none:'' }}"
                         autocomplete="off"
                         autofocus
                         required
@@ -39,6 +40,7 @@
                         class="form-control" 
                         id="new-workshop-number"
                         name="new-workshop-number"
+                        value="{{ workshop.number|default_if_none:'' }}"
                         autocomplete="off"
                         required
                     >
@@ -51,29 +53,40 @@
                         class="form-control" 
                         id="new-workshop-description" 
                         autocomplete="off" 
-                        name="new-workshop-description" 
+                        name="new-workshop-description"
                         required 
                         style="min-height: 120px;"
-                    ></textarea>
+                    >{{ workshop.description|default_if_none:'' }}</textarea>
                     <label for="new-workshop-description">Description</label>
                 </div>
             </div>
             <div class="mb-3">
-                <label for="new-workshop-google-doc-url" style="font-size: 14px; margin-left: 13px; color: grey;">Google Docs URL</label>
+                <div class="form-floating">
+                    <select class="form-select" name="new-workshop-grade" id="new-workshop-grade" required>
+                        <option value="" disabled {% if not workshop %}selected{% endif %}>Select Grade</option>
+                        <option value="11" {% if workshop.grade == 11 %}selected{% endif %}>11</option>
+                        <option value="12" {% if workshop.grade == 12 %}selected{% endif %}>12</option>
+                    </select>
+                    <label for="new-workshop-grade">Grade</label>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="new-workshop-google-doc-id" style="font-size: 14px; margin-left: 13px; color: grey;">Google Docs URL</label>
                 <div class="input-group">
                     <span class="input-group-text" id="google-docs-link-format">https://docs.google.com/document/d/</span>
                     <input 
                         type="text" 
                         class="form-control" 
-                        id="new-workshop-google-doc-url"
-                        name="new-workshop-google-doc-url"
+                        id="new-workshop-google-doc-id"
+                        name="new-workshop-google-doc-id"
+                        value="{{ workshop.google_doc_id|default_if_none:'' }}"
                         autocomplete="off"
                         aria-describedby="google-docs-link-format"
                     >
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-primary w-100">Create</button>
+            <button type="submit" class="btn btn-primary w-100">{{ submit_button_text }}</button>
         </form>
     </div>
 {% endblock %}

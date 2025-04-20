@@ -11,7 +11,7 @@ class WorkshopMaterial(models.Model):
     number=models.IntegerField(blank=True, null=True)  # I.e. Session 1, 2, etc.
     description=models.TextField(blank=True)
     grade=models.IntegerField(choices=GRADE_CHOICES)
-    google_doc_url=models.URLField(blank=True, null=True)
+    google_doc_id=models.CharField(blank=True, null=True, max_length=1000)
 
     def __str__(self):
         return f"{self.name}: {self.description[:20]}"

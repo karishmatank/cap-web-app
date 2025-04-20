@@ -1,0 +1,93 @@
+{% extends "workshops/layout.html" %}
+
+{% block title %}
+    CAP - Workshops
+{% endblock %}
+
+{% block body %}
+    <div class="my-3 mx-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!--Create new workshop button for admins-->
+        {% if request.user.userprofile.role == 'admin' %}
+            <div class="mb-4">
+                <a href="{% url 'workshops:create_workshop' %}" class="btn btn-lg btn-success">Create New Workshop</a>
+            </div>
+        {% endif %}
+
+        <div class="row">
+            {% regroup workshops by grade as grade_groups %}
+
+            {% for group in grade_groups %}
+                <div class="col-md-6 mb-4">
+                    <h2><u>{{ group.grouper }}th Grade Workshops</u></h2>
+                    {% for workshop in group.list %}
+                        <div class="workshop card shadow-sm mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <a href="{% url 'workshops:workshop_details' workshop.id %}">
+                                        Workshop #{{ workshop.number }}: {{ workshop.name }}
+                                    </a>
+                                </h5>
+                                <p class="card-text">{{ workshop.description }}</p>
+                                {% if request.user.userprofile.role == 'admin' %}
+                                    <a href="{% url 'workshops:edit_workshop' workshop.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-sm btn-danger" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deleteWorkshop{{ workshop.id }}"
+                                    >
+                                        Delete
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Modal when deleting -->
+                        <div 
+                            class='modal fade' 
+                            id="deleteWorkshop{{ workshop.id }}" 
+                            tabindex="-1" 
+                            aria-labelledby="deleteWorkshopModalLabel{{ workshop.id }}" 
+                            aria-hidden="true"
+                        >
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteWorkshopModalLabel{{ workshop.id }}">Delete Workshop</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>
+                                            Are you sure you want to delete <strong>Workshop #{{ workshop.number }}: {{ workshop.name }}</strong>?
+                                        </p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form method="post" action="{% url 'workshops:delete_workshop' workshop.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger">
+                                                Yes
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}

@@ -12,6 +12,6 @@ def admin_only(view_func):
 
         if profile and profile.role == 'admin':
             return view_func(request, *args, **kwargs)
-        messages.error(request, "You're not authorized to view this page.")
+        messages.warning(request, "You're not authorized to view this page.")
         return redirect("workshops:index")
     return wrapper
