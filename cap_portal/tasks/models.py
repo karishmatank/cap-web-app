@@ -1,3 +1,43 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 # Create your models here.
+SCHOOL_PLATFORM_CHOICES = (
+    ('common_app', 'Common App'),
+    ('questbridge', 'Questbridge'),
+    ('cuny', 'CUNY'),
+    ('suny', 'SUNY'),
+    ('school_specific', 'School Specific')
+)
+
+PARENT_CATEGORY_CHOICES = (
+    ('school', 'School'),
+    ('internship', 'Internship'),
+    ('financial_aid', 'Financial Aid'),
+    ('scholarship', 'Scholarship'),
+    ('other', 'Other')
+)
+
+class Application(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="applications")
+    name = models.CharField(max_length=255)
+    category = models.CharField(choices=PARENT_CATEGORY_CHOICES, max_length=50)
+    notes = models.TextField(blank=True)
+
+    # Self referencing platform would allow us to link a school with Common App, which itself will be an Application object
+    platform=models.ForeignKey('self', choices=SCHOOL_PLATFORM_CHOICES, null=True, blank=True, on_delete=models.SET_NULL, related_name='linked_apps')
+
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+class ToDo(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="todos")
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    completed = models.BooleanField(default=False)
+    tags = models.CharField(max_length=255)
+    applications = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="todos")
+    
+    def __str__(self):
+        return f"{self.title}: {'Completed' if self.completed else 'Not Completed'}"
