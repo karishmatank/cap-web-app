@@ -18,11 +18,17 @@ PARENT_CATEGORY_CHOICES = (
     ('other', 'Other')
 )
 
+STATUS_CHOICES = (
+    ('in_progress', 'In Progress'),
+    ('submitted', 'Submitted')
+)
+
 class Application(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="applications")
     name = models.CharField(max_length=255)
     category = models.CharField(choices=PARENT_CATEGORY_CHOICES, max_length=50)
     notes = models.TextField(blank=True)
+    status = models.CharField(choices=STATUS_CHOICES, max_length=50, default="in_progress")
 
     # Self referencing platform would allow us to link a school with Common App, which itself will be an Application object
     platform=models.ForeignKey('self', choices=SCHOOL_PLATFORM_CHOICES, null=True, blank=True, on_delete=models.SET_NULL, related_name='linked_apps')

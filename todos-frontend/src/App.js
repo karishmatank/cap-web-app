@@ -1,0 +1,44 @@
+import axios from 'axios';
+import './App.css';
+import { BrowserRouter as Router } from 'react-router-dom';
+import Navbar from './components/Navbar'; 
+import useCurrentUser from './hooks/useCurrentUser';
+import { useState, useEffect } from "react";
+import ApplicationList from './components/ApplicationList';
+
+function Layout() {
+  const { currentUser, loading } = useCurrentUser();
+
+  /* Check that there is a currentUser (user is authenticated) 
+  Need to keep this for last because otherwise React freaks out about hooks not running in the same order every render
+  given the if statements below*/
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (!currentUser) {
+    // Redirect user to login. Using localhost:8000 for now
+    window.location.href = 'http://localhost:8000/users/login/?next=' + window.location.pathname;
+    return null;
+  }
+
+  return (
+    <div className="main-wrapper">
+      <Navbar />
+      <div className="app-container">
+        <ApplicationList />
+      </div>
+    </div>
+  )
+}
+
+function App() {
+  
+  return (
+    <Router>
+      <Layout />
+    </Router>
+  );
+}
+
+export default App;

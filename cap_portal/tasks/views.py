@@ -4,6 +4,8 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import Application, ToDo
 from .serializers import ApplicationSerializer, ToDoSerializer
@@ -50,11 +52,30 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Application.objects.filter(user=self.request.user)
+        return Application.objects.filter(user=self.request.user).order_by('status', 'name')
     
     def perform_create(self, serializer):
         # Other fields get saved, but it won't save the user as that won't be specified in a form
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["get"])
+    def category_choices(self, request):
+        return Response([
+            {"value": value, "label": label} for value, label in Application._meta.get_field("category").choices
+        ])
+    
+    @action(detail=False, methods=["get"])
+    def platform_choices(self, request):
+        return Response([
+            {"value": value, "label": label} for value, label in Application._meta.get_field("platform").choices
+        ])
+    
+    @action(detail=False, methods=["get"])
+    def status_choices(self, request):
+        return Response([
+            {"value": value, "label": label} for value, label in Application._meta.get_field("status").choices
+        ])
+    
 
 class ToDoViewSet(viewsets.ModelViewSet):
     serializer_class = ToDoSerializer
