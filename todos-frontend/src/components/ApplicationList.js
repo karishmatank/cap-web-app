@@ -148,6 +148,12 @@ function EditableTextArea({ value, onSave }) {
         }
     }, [isEditing]);
 
+    useEffect(() => {
+        if (!isEditing) {
+            setDraft(value);
+        }
+    }, [value, isEditing]);
+
     return isEditing ? (
         <textarea
             ref={textAreaRef}
@@ -184,7 +190,7 @@ function EditableTextArea({ value, onSave }) {
             }} 
             style={{ cursor: "pointer", width: "100%", height: "100%" }}
         >
-            {value}
+            {value || <i className="placeholder-text">Click to add notes</i>}
         </div>
     );
 }

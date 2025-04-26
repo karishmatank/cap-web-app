@@ -79,3 +79,10 @@
 .edit-btn:hover {
   opacity: 1;
 }
+
+.placeholder-text {
+  color: #6c757d;
+  font-size: 0.9em;
+  font-style: italic;
+  opacity: 0.8;
+}
