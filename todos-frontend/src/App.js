@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import useCurrentUser from './hooks/useCurrentUser';
 import { useState, useEffect } from "react";
 import ApplicationList from './components/ApplicationList';
+import { Tab, Tabs } from 'react-bootstrap';
 
 function Layout() {
   const { currentUser, loading } = useCurrentUser();
@@ -26,7 +27,16 @@ function Layout() {
     <div className="main-wrapper">
       <Navbar />
       <div className="app-container">
-        <ApplicationList />
+        <Tabs
+          defaultActiveKey="applications"
+        >
+          <Tab eventKey="applications" title="Applications">
+            <ApplicationList />
+          </Tab>
+          <Tab eventKey="todos" title="To Dos">
+            <div>To do...</div>
+          </Tab>
+        </Tabs>
       </div>
     </div>
   )
