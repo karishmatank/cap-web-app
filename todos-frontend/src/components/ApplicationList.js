@@ -2,7 +2,7 @@ import axios from '../utils/axios';
 import { useEffect, useState, React, useRef } from 'react';
 import { Modal, Button, Form, FloatingLabel, Table} from 'react-bootstrap';
 
-function EditableInput({ value, onSave }) {
+function EditableInput({ value, onSave, customWidth }) {
     const [isEditing, setIsEditing] = useState(false);
     const [draft, setDraft] = useState(value);
 
@@ -26,11 +26,21 @@ function EditableInput({ value, onSave }) {
                 }
             }}
             className="form-control form-control-sm editable-input"
+            style={{ width: customWidth }}
         />
     ) : (
-        <span onClick={() => setIsEditing(true)} style={{ cursor: "pointer" }}>
+        <div 
+            onClick={(event) => {
+                // Make sure multiple clicks inside the input / textarea don't re-enter edit mode or trigger unwanted behavior
+                if (event.target.tagName !== "TEXTAREA" && event.target.tagName !== "INPUT") {
+                    setIsEditing(true);
+                }
+            }} 
+            style={{ cursor: "pointer", width: customWidth, height: "100%" }}
+            className="editable-text"
+        >
             {value}
-        </span>
+        </div>
     );
 }
 
@@ -88,13 +98,13 @@ function EditableSelect({ value, field_name, options, onSave }) {
                     ))}
                 </ul>
             ) : (
-                <span 
+                <div 
                     className={`badge rounded-pill text-bg-${getBadgeColor(value, field_name)} text-capitalize`} 
                     onClick={() => setIsEditing(true)} 
-                    style={{ cursor: "pointer" }}
+                    style={{ cursor: "pointer", width: "100%", height: "100%" }}
                 >
                     {findValueByKey(value, options) || "Not set"}
-                </span>
+                </div>
             )}
         </div>
     );
@@ -165,9 +175,17 @@ function EditableTextArea({ value, onSave }) {
             {draft}
         </textarea>
     ) : (
-        <span onClick={() => setIsEditing(true)} style={{ cursor: "pointer" }}>
+        <div 
+            onClick={(event) => {
+                // Make sure multiple clicks inside the input / textarea don't re-enter edit mode or trigger unwanted behavior
+                if (event.target.tagName !== "TEXTAREA" && event.target.tagName !== "INPUT") {
+                    setIsEditing(true);
+                }
+            }} 
+            style={{ cursor: "pointer", width: "100%", height: "100%" }}
+        >
             {value}
-        </span>
+        </div>
     );
 }
 
@@ -176,7 +194,7 @@ function ApplicationList() {
     const [appData, setAppData] = useState({});
     const tableVisibleFields = [
         {'field_name': 'status', 'type': 'select', 'width': '10%'}, 
-        {'field_name': 'name', 'type': 'text', 'width': '20%'}, 
+        {'field_name': 'name', 'type': 'text', 'width': '30%'}, 
         {'field_name': 'category', 'type': 'select', 'width': '10%'}, 
         {'field_name': 'platform', 'type': 'select', 'width': '10%'},
         {'field_name': 'notes', 'type': 'textarea', 'width': '40%'}
@@ -186,7 +204,6 @@ function ApplicationList() {
     const [platformOptions, setPlatformOptions] = useState([]);
     const [statusOptions, setStatusOptions] = useState([]);
     const [mode, setMode] = useState("");
-    const [showEditButton, setShowEditButton] = useState(true);
 
     // Get category and platform choices to use for the form
     useEffect(() => {
@@ -382,7 +399,7 @@ function ApplicationList() {
             </Modal>
 
             <div className="application-table">
-                <Table hover responsive>
+                <Table hover responsive style={{ tableLayout: "fixed", width: "100%" }}>
                     <thead>
                         <tr key="header">
                             {tableVisibleFields.map((field) => (
@@ -409,13 +426,12 @@ function ApplicationList() {
                                             <>
                                             <EditableInput
                                                 value={app[field.field_name]}
-                                                onClick={() => setShowEditButton(false)}
                                                 onSave={(newValue) => {
                                                     updateField(app.id, field.field_name, newValue);
-                                                    setShowEditButton(true);
                                                 }}
+                                                customWidth={field.field_name === "name" ? "80%": "100%"}
                                             />
-                                            {(field.field_name === "name" && showEditButton) && (
+                                            {field.field_name === "name" && (
                                                 <Button
                                                     size='sm'
                                                     className="edit-btn"
