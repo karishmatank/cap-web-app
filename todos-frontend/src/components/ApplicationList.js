@@ -25,7 +25,7 @@ function EditableInput({ value, onSave }) {
                     setIsEditing(false);
                 }
             }}
-            className="form-control form-control-sm"
+            className="form-control form-control-sm editable-input"
         />
     ) : (
         <span onClick={() => setIsEditing(true)} style={{ cursor: "pointer" }}>
@@ -100,20 +100,93 @@ function EditableSelect({ value, field_name, options, onSave }) {
     );
 }
 
+function EditableTextArea({ value, onSave }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [draft, setDraft] = useState(value);
+    const textAreaRef = useRef(null);
+
+    const saveChanges = () => {
+        setIsEditing(false);
+        onSave(draft);
+    }
+
+    // Automatically move cursor to end when we are editing
+    useEffect(() => {
+        if (isEditing && textAreaRef.current) {
+            const el = textAreaRef.current;
+            el.focus();
+            el.selectionStart = el.selectionEnd = el.value.length;
+        }
+    }, [isEditing]);
+
+    // Autoresize text area as user is typing
+    const autoResize = () => {
+        const el = textAreaRef.current;
+        console.log("Auto resizing!", el?.scrollHeight);
+        if (el) {
+            el.style.height = "auto"; // Reset height to shrink if needed
+            el.style.height = `${el.scrollHeight}px`; // Expand to fit content
+        }
+    };
+
+    useEffect(() => {
+        if (isEditing) {
+            // Wait until DOM paints before we calculate scrollHeight
+            requestAnimationFrame(() => {
+                autoResize();
+            });
+        }
+    }, [isEditing]);
+
+    return isEditing ? (
+        <textarea
+            ref={textAreaRef}
+            style={{ overflow: "hidden", resize:"none" }}
+            autoFocus
+            onChange={(event) => {
+                setDraft(event.target.value);
+                autoResize();
+            }}
+            onBlur={saveChanges}
+            onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault(); // Prevent newline unless we have a shift present
+                    saveChanges();
+                }
+                if (event.key === "Escape") {
+                    setDraft(value);
+                    setIsEditing(false);
+                }
+            }}
+            className="editable-input"
+            value={draft}
+            rows={1}
+        >
+            {draft}
+        </textarea>
+    ) : (
+        <span onClick={() => setIsEditing(true)} style={{ cursor: "pointer" }}>
+            {value}
+        </span>
+    );
+}
+
 function ApplicationList() {
     const [apps, setApps] = useState([]);
     const [appData, setAppData] = useState({});
     const tableVisibleFields = [
-        {'field_name': 'status', 'type': 'select'}, 
-        {'field_name': 'name', 'type': 'text'}, 
-        {'field_name': 'category', 'type': 'select'}, 
-        {'field_name': 'platform', 'type': 'select'}
+        {'field_name': 'status', 'type': 'select', 'width': '10%'}, 
+        {'field_name': 'name', 'type': 'text', 'width': '20%'}, 
+        {'field_name': 'category', 'type': 'select', 'width': '10%'}, 
+        {'field_name': 'platform', 'type': 'select', 'width': '10%'},
+        {'field_name': 'notes', 'type': 'textarea', 'width': '40%'}
     ];
     const [showModal, setShowModal] = useState(false);
     const [categoryOptions, setCategoryOptions] = useState([]);
     const [platformOptions, setPlatformOptions] = useState([]);
     const [statusOptions, setStatusOptions] = useState([]);
     const [mode, setMode] = useState("");
+    const [showEditButton, setShowEditButton] = useState(true);
 
     // Get category and platform choices to use for the form
     useEffect(() => {
@@ -173,9 +246,7 @@ function ApplicationList() {
     const editApplication = (event, id) => {
         event.preventDefault();
 
-        axios.put(`/tasks/api/applications/${id}`, {
-            appData
-        })
+        axios.put(`/tasks/api/applications/${id}/`, appData)
         .then((response) => {
             console.log("Application updated", response.data);
             setMode("");
@@ -311,7 +382,7 @@ function ApplicationList() {
             </Modal>
 
             <div className="application-table">
-                <Table hover>
+                <Table hover responsive>
                     <thead>
                         <tr key="header">
                             {tableVisibleFields.map((field) => (
@@ -319,6 +390,7 @@ function ApplicationList() {
                                     className="text-capitalize" 
                                     scope="col" 
                                     key={`header-${field.field_name}`}
+                                    style={{ width: field.width }}
                                 >
                                     {field.field_name}
                                 </th>
@@ -329,15 +401,37 @@ function ApplicationList() {
                         {apps.map((app) => (
                             <tr key={app.id}>
                                 {tableVisibleFields.map((field) => (
-                                    <td key={`${app.id}-${field.field_name}`}>
+                                    <td 
+                                        key={`${app.id}-${field.field_name}`}
+                                        style={field.field_name === "name" ? { position: "relative" } : undefined}
+                                    >
                                         {field.type === "text" ? (
+                                            <>
                                             <EditableInput
                                                 value={app[field.field_name]}
+                                                onClick={() => setShowEditButton(false)}
                                                 onSave={(newValue) => {
                                                     updateField(app.id, field.field_name, newValue);
+                                                    setShowEditButton(true);
                                                 }}
                                             />
-                                        ) : (
+                                            {(field.field_name === "name" && showEditButton) && (
+                                                <Button
+                                                    size='sm'
+                                                    className="edit-btn"
+                                                    type="button"
+                                                    variant='outline-secondary'
+                                                    onClick={() => {
+                                                        setMode("edit");
+                                                        setAppData(app);
+                                                        setShowModal(true);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            )}
+                                            </>
+                                        ) : field.type === 'select' ? (
                                             <EditableSelect 
                                                 value={app[field.field_name]}
                                                 field_name={field.field_name}
@@ -351,23 +445,16 @@ function ApplicationList() {
                                                     updateField(app.id, field.field_name, newValue);
                                                 }}
                                             />
+                                        ) : (
+                                            <EditableTextArea
+                                                value={app[field.field_name]}
+                                                onSave={(newValue) => {
+                                                    updateField(app.id, field.field_name, newValue);
+                                                }}
+                                            />
                                         )}
                                     </td>
                                 ))}
-                                <td key={`${app.id}-edit`}>
-                                    <Button
-                                        size='sm'
-                                        type="button"
-                                        variant='outline-info'
-                                        onClick={() => {
-                                            setMode("edit");
-                                            setAppData(app);
-                                            setShowModal(true);
-                                        }}
-                                    >
-                                        Edit
-                                    </Button>
-                                </td>
                             </tr>
                         ))}
                     </tbody>
