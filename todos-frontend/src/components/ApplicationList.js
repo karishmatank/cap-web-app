@@ -278,6 +278,13 @@ function ApplicationList() {
 
     // Update a specific field inline in table
     const updateField = (id, field, value) => {
+        // Update apps list before submitting patch request so that update looks seamless on the table
+        setApps((prevApps) => 
+            prevApps.map((app) => 
+                app.id === id ? {...app, [field]: value } : app
+            )
+        );
+
         axios.patch(`/tasks/api/applications/${id}/`, {
             [field]: value
         })
