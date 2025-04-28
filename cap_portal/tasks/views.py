@@ -7,8 +7,8 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import Application, ToDo
-from .serializers import ApplicationSerializer, ToDoSerializer
+from .models import Application, ToDo, TAG_CHOICES
+from .serializers import ApplicationSerializer, ToDoSerializer, ApplicationChoiceSerializer
 
 # class NewTaskForm(forms.Form):
 #     task = forms.CharField(label="New Task")
@@ -82,7 +82,19 @@ class ToDoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return ToDo.objects.filter(user=self.request.user)
+        return ToDo.objects.filter(user=self.request.user).order_by('due_date', 'application')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["get"])
+    def application_choices(self, request):
+        queryset = Application.objects.filter(user=self.request.user, status="in_progress").order_by('name')
+        serializer = ApplicationChoiceSerializer(queryset, many=True)
+        return Response(serializer.data)
+        
+    @action(detail=False, methods=["get"])
+    def tag_choices(self, request):
+        return Response([
+            {"value": value, "label": label} for value, label in TAG_CHOICES
+        ])

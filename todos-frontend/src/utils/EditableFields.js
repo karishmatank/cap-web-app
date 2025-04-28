@@ -1,4 +1,8 @@
-import { useEffect, useState, React, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import React from "react";
+import { createPortal } from 'react-dom';
+import { DayPicker } from 'react-day-picker';
+import "react-day-picker/dist/style.css";
 
 export function EditableInput({ value, onSave, customWidth }) {
     const [isEditing, setIsEditing] = useState(false);
@@ -189,6 +193,97 @@ export function EditableTextArea({ value, onSave }) {
             style={{ cursor: "pointer", width: "100%", height: "100%" }}
         >
             {value || <i className="placeholder-text">Click to add notes</i>}
+        </div>
+    );
+}
+
+export function EditableDate({ value, onSave }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [draft, setDraft] = useState(value);
+    const datePickerRef = useRef(null);
+    const calendarRef = useRef(null);
+    const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0 });
+
+    const handleFocus = () => {
+        if (datePickerRef.current) {
+            datePickerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    };
+
+    const saveChanges = (date) => {
+        // react-datepicker itself calls this function and directly passes in the new Date object
+        setDraft(date);
+
+        const formattedDate = date.getFullYear() + "-" +
+            String(date.getMonth() + 1).padStart(2, "0") + "-" +
+            String(date.getDate()).padStart(2, "0");
+        
+        console.log(formattedDate);
+
+        onSave(formattedDate);
+        setIsEditing(false);
+    };
+
+    useEffect(() => {
+        if (!isEditing) {
+            setDraft(value ? new Date(value) : null);
+        }
+    }, [value, isEditing]);
+
+    const openCalendar = () => {
+        if (datePickerRef.current) {
+            const rect = datePickerRef.current.getBoundingClientRect();
+            setCalendarPosition({
+                top: rect.bottom + window.scrollY,
+                left: rect.left + window.scrollX,
+            });
+        }
+        setIsEditing(true);
+    };
+
+    // Collapse calendar if user clicks away
+    const handleClickOutside = (event) => {
+        if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+            setIsEditing(false);
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    return (
+        <div ref={datePickerRef} style={{ position: "relative", cursor: "pointer", width: "100%", height: "100%" }}>
+            <span
+                onClick={openCalendar}
+                className='form-control editable-input'
+            >
+                {draft ? draft.toLocaleDateString() : <i className="placeholder-text">Click to set due date</i>}
+            </span>
+            {isEditing && createPortal(
+                <div ref={calendarRef} style={{
+                    position: 'absolute',
+                    top: `${calendarPosition.top}px`,
+                    left: `${calendarPosition.left}px`,
+                    zIndex: 2000,
+                    background: 'white',
+                    boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.15)',
+                    borderRadius: '0.5rem',
+                    marginTop: '4px',
+                }}>
+                    <DayPicker
+                        mode="single"
+                        selected={draft}
+                        onSelect={(date) => saveChanges(date)}
+                        timezone="America/New_York"
+                        defaultMonth={draft ? new Date(draft.getFullYear(), draft.getMonth()) : undefined}
+                    />
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

@@ -23,6 +23,19 @@ STATUS_CHOICES = (
     ('submitted', 'Submitted')
 )
 
+TAG_CHOICES = (
+    ('activities', 'Activity List'),
+    ('application', 'Application'),
+    ('fit', 'Assess College Fit'),
+    ('interview', 'Interview'),
+    ('lor', 'Letters of Recommendation'),
+    ('story', 'Personal Story'),
+    ('transcript', 'Transcript'),
+    ('test_scores', 'Test Scores'),
+    ('writing', 'Writing'),
+    ('other', 'Other')
+)
+
 class Application(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="applications")
     name = models.CharField(max_length=255)
@@ -42,8 +55,8 @@ class ToDo(models.Model):
     description = models.TextField(blank=True)
     due_date = models.DateField(null=True, blank=True)
     completed = models.BooleanField(default=False)
-    tags = models.CharField(max_length=255)
-    applications = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="todos")
+    tags = models.CharField(max_length=500, blank=True)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="todos")
     
     def __str__(self):
-        return f"{self.title}: {'Completed' if self.completed else 'Not Completed'}"
+        return f"{self.name}: {'Completed' if self.completed else 'Not Completed'}"

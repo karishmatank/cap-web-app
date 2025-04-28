@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import useCurrentUser from './hooks/useCurrentUser';
 import { useState, useEffect } from "react";
 import ApplicationList from './components/ApplicationList';
+import ToDoFullList from './components/ToDoFullList';
 import { Tab, Tabs } from 'react-bootstrap';
 
 function Layout() {
@@ -34,7 +35,7 @@ function Layout() {
             <ApplicationList />
           </Tab>
           <Tab eventKey="todos" title="To Dos">
-            <div>To do...</div>
+            <ToDoFullList />
           </Tab>
         </Tabs>
       </div>

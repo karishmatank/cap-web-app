@@ -9,6 +9,14 @@ class ApplicationSerializer(serializers.ModelSerializer):
         model = Application
         fields = '__all__'
 
+class ApplicationChoiceSerializer(serializers.ModelSerializer):
+    value = serializers.IntegerField(source="id")
+    label = serializers.CharField(source="name")
+
+    class Meta:
+        model = Application
+        fields = ("value", "label")
+
 class ToDoSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     

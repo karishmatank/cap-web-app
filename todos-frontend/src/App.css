@@ -93,6 +93,11 @@
   opacity: 0.8;
 }
 
+.small-calendar {
+  font-size: 0.85rem;
+  width: 250px;
+}
+
 .tab-content {
   border: 1px solid;
   border-color: #dee2e6;
