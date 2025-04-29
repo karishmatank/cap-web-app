@@ -20,8 +20,6 @@ function ToDoFullList() {
     const [applicationOptions, setApplicationOptions] = useState([]);
     const [tagOptions, setTagOptions] = useState([]);
     const datePickerRef = useRef(null);
-    const [viewMonth, setViewMonth] = useState(new Date().getMonth());
-    const [viewYear, setViewYear] = useState(new Date().getFullYear());
 
     // Get application options specific to the user
     useEffect(() => {

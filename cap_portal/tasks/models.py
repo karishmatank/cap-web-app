@@ -7,7 +7,6 @@ SCHOOL_PLATFORM_CHOICES = (
     ('questbridge', 'Questbridge'),
     ('cuny', 'CUNY'),
     ('suny', 'SUNY'),
-    ('school_specific', 'School Specific')
 )
 
 PARENT_CATEGORY_CHOICES = (
@@ -60,3 +59,18 @@ class ToDo(models.Model):
     
     def __str__(self):
         return f"{self.name}: {'Completed' if self.completed else 'Not Completed'}"
+    
+class PlatformTemplate(models.Model):
+    name = models.CharField(choices=SCHOOL_PLATFORM_CHOICES, max_length=255)
+    category = models.CharField(choices=PARENT_CATEGORY_CHOICES, default="school", max_length=50)
+
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+class PlatformTemplateToDo(models.Model):
+    name = models.CharField(max_length=255)
+    platform = models.ForeignKey(PlatformTemplate, on_delete=models.CASCADE, related_name="todos")
+    tags = models.CharField(max_length=500, blank=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.platform.name}"
