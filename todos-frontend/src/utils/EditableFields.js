@@ -64,8 +64,13 @@ export function EditableSelect({ value, field_name, options, onSave }) {
     };
 
     const findValueByKey = (key, list) => {
-        const foundItem = list.find((item) => item['value'] === key);
-        return foundItem?.['label'] ?? null;
+        if (field_name === 'platform_template') {
+            const foundItem = list.find((item) => item['id'] === key);
+            return foundItem?.['name'] ?? null;
+        } else {
+            const foundItem = list.find((item) => item['value'] === key);
+            return foundItem?.['label'] ?? null;
+        }
     };
 
     // If we click outside the container, stop editing

@@ -7,35 +7,41 @@ function ApplicationPlatformSurvey() {
     const [platformChoices, setPlatformChoices] = useState([]);
     const [electedIds, setElectedIds] = useState([]);
 
-    const fetchElections = () => {
-        axios.get('/tasks/api/platform-registrations/')
-        .then((response) => {
+    const fetchElections = async () => {
+        try {
+            const response = await axios.get('/tasks/api/platform-registrations/');
             const extractedIds = response.data.map(item => item.platform_template.id);
             setElectedIds(extractedIds);
-        })
-        .catch((error) => {
+            return extractedIds;
+        } catch (error) {
             console.error("Error getting user elections", error);
-        });
+        }
+    };
+
+    const fetchAvailableChoices = async (excludedIds) => {
+        // Get remaining platform choices. Set up below so that it only runs after electedIds is updated
+        try {
+            const response = await axios.get('/tasks/api/platform-templates/')
+            const remainingChoices = response.data.filter((choice) => !excludedIds.includes(choice.id));
+            setPlatformChoices(remainingChoices);
+        } catch (error) {
+            console.error("Error fetching platform choices", error);
+        }
     };
 
     useEffect(() => {
         // See what the user has already elected
-        fetchElections();
-    }, []);
+        const runSequentially = async () => {
+            // Refresh user elections. Also runs after they submit the form given we are reloading
+            const extractedIds = await fetchElections();
 
-    useEffect(() => {
-        if (electedIds.length > 0) {
-            // Get remaining platform choices. Only runs after electedIds is updated
-            axios.get('/tasks/api/platform-templates/')
-            .then((response) => {
-                const remainingChoices = response.data.filter((choice) => !electedIds.includes(choice.id));
-                setPlatformChoices(remainingChoices);
-            })
-            .catch((error) => {
-                console.error("Error fetching platform choices", error);
-            });
-        }
-    }, [electedIds]);
+            // Refresh available choices. Also runs after they submit the form given we are reloading
+            await fetchAvailableChoices(extractedIds);
+        };
+        
+        runSequentially();
+        
+    }, []);
 
     const handleCheckboxChange = (event) => {
         // If a checkbox is checked, add it to a newly elected list. Remove if unchecked
@@ -63,29 +69,32 @@ function ApplicationPlatformSurvey() {
             console.error("Error registering new platforms", error);
         });
 
-        // Refresh user elections after they submit the form
-        fetchElections();
+        // Refresh the window. 
+        // Shortcut to just get the applications and todos refreshed to avoid sharing states across files
+        window.location.reload();
     };
 
     return showAlert && (
-        <div style={{ width: '50%' }}>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
             <Alert key='primary' variant='primary' dismissible onClose={() => setShowAlert(false)}>
                 <Alert.Heading>
                     Platforms
                 </Alert.Heading>
                 <p>Which of the following platforms will you be using to apply to schools?</p>
                 <Form onSubmit={submitPlatforms}>
-                    {platformChoices.map((choice) => (
-                        <Form.Check
-                            key={choice.id}
-                            type="checkbox"
-                            id={choice.id}
-                            label={choice.name}
-                            value={choice.id}
-                            checked={electedIds.includes(choice.id)}
-                            onChange={handleCheckboxChange}
-                        />
-                    ))}
+                    <div className="mb-2">
+                        {platformChoices.map((choice) => (
+                            <Form.Check
+                                key={choice.id}
+                                type="checkbox"
+                                id={choice.id}
+                                label={choice.name}
+                                value={choice.id}
+                                checked={electedIds.includes(choice.id)}
+                                onChange={handleCheckboxChange}
+                            />
+                        ))}
+                    </div>
                     <Button type="submit">Submit</Button>
                 </Form>
             </Alert>
