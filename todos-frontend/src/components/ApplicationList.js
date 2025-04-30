@@ -10,7 +10,7 @@ function ApplicationList() {
         {'field_name': 'status', 'type': 'select', 'width': '15%'}, 
         {'field_name': 'name', 'type': 'text', 'width': '25%'}, 
         {'field_name': 'category', 'type': 'select', 'width': '15%'}, 
-        {'field_name': 'platform', 'type': 'select', 'width': '15%'},
+        {'field_name': 'platform_template', 'type': 'select', 'width': '15%'},
         {'field_name': 'notes', 'type': 'textarea', 'width': '40%'}
     ];
     const [showModal, setShowModal] = useState(false);
@@ -29,9 +29,10 @@ function ApplicationList() {
             console.error("Error retrieving application categories", error);
         });
 
-        axios.get("/tasks/api/applications/platform_choices/")
+        axios.get("/tasks/api/platform-registrations/")
         .then((response) => {
-            setPlatformOptions(response.data);
+            const extractedOptions = response.data.map((item) => item.platform_template);
+            setPlatformOptions(extractedOptions);
         })
         .catch((error) => {
             console.error("Error retrieving application school platforms", error);
@@ -49,9 +50,12 @@ function ApplicationList() {
 
     // Changes to form when creating or editing an application's information
     const handleChange = (event) => {
+        const name = event.target.name;
+        const value = event.target.value;
+
         setAppData((prev) => ({
             ...prev,
-            [event.target.name]: event.target.value
+            [name]: name === "platform_template" ? (value !== "" ? parseInt(value): null) : value
         }));
     };
 
@@ -182,11 +186,11 @@ function ApplicationList() {
                         </FloatingLabel>
                         {appData.category === 'school' && (
                             <FloatingLabel controlId='floatingPlatform' label="Platform, If Applicable" className="mb-3">
-                                <Form.Select name="platform" value={appData.platform || ""} onChange={handleChange}>
+                                <Form.Select name="platform_template" value={appData.platform_template || ""} onChange={handleChange}>
                                     <option value="">Select a platform</option>
                                     {platformOptions.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
+                                        <option key={option.id} value={option.id}>
+                                            {option.name}
                                         </option>
                                     ))}
                                 </Form.Select>
@@ -232,7 +236,7 @@ function ApplicationList() {
                                     key={`header-${field.field_name}`}
                                     style={{ width: field.width }}
                                 >
-                                    {field.field_name}
+                                    {field.field_name === 'platform_template' ? "Platform" : field.field_name}
                                 </th>
                             ))}
                         </tr>
@@ -277,7 +281,7 @@ function ApplicationList() {
                                                 options={
                                                     field.field_name === 'status' ? statusOptions
                                                     : field.field_name === 'category' ? categoryOptions
-                                                    : field.field_name === 'platform' ? platformOptions
+                                                    : field.field_name === 'platform_template' ? platformOptions
                                                     : []
                                                 }
                                                 onSave={(newValue) => {

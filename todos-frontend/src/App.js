@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import useCurrentUser from './hooks/useCurrentUser';
 import { useState, useEffect } from "react";
 import ApplicationList from './components/ApplicationList';
+import ApplicationPlatformSurvey from './components/ApplicationPlatformSurvey';
 import ToDoFullList from './components/ToDoFullList';
 import { Tab, Tabs } from 'react-bootstrap';
 
@@ -28,6 +29,7 @@ function Layout() {
     <div className="main-wrapper">
       <Navbar />
       <div className="app-container">
+        <ApplicationPlatformSurvey />
         <Tabs
           defaultActiveKey="applications"
         >

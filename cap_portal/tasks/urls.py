@@ -9,8 +9,10 @@ app_name = "tasks"
 # ]
 
 router = DefaultRouter()
-router.register(r'todos', views.ToDoViewSet, basename='todo')
-router.register(r'applications', views.ApplicationViewSet, basename='application')
+router.register(r'todos', views.ToDoViewSet, basename='todos')
+router.register(r'applications', views.ApplicationViewSet, basename='applications')
+router.register(r'platform-templates', views.PlatformTemplateViewSet, basename='platform-templates')
+router.register(r'platform-registrations', views.PlatformTemplateSubmissionViewSet, basename='platform-registrations')
 
 urlpatterns = [
     path('api/', include(router.urls))

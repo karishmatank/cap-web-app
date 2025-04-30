@@ -81,7 +81,25 @@ export function EditableSelect({ value, field_name, options, onSave }) {
 
     return (
         <div ref={containerRef}>
-            {isEditing ? (
+            {isEditing && field_name === "platform_template" ? (
+                <ul className="list-group position-absolute shadow" style={{ zIndex: 10 }}>
+                    {options.map((option) => (
+                        <li
+                            key={option.id}
+                            onClick={() => {
+                                saveChanges(parseInt(option.id));
+                                setIsEditing(false);
+                            }}
+                            style={{ cursor: "pointer" }}
+                            className="list-group-item list-group-item-action d-flex align-items-center gap-2"
+                        >
+                            <span className={`badge rounded-pill text-bg-${getBadgeColor(option.name, field_name)}`}>
+                                {option.name}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            ): isEditing ? (
                 <ul className="list-group position-absolute shadow" style={{ zIndex: 10 }}>
                     {options.map((option) => (
                         <li

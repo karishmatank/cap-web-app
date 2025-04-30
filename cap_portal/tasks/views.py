@@ -3,12 +3,12 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import Application, ToDo, TAG_CHOICES
-from .serializers import ApplicationSerializer, ToDoSerializer, ApplicationChoiceSerializer
+from .models import Application, ToDo, TAG_CHOICES, PlatformTemplate, PlatformTemplateSubmission
+from .serializers import ApplicationSerializer, ToDoSerializer, ApplicationChoiceSerializer, PlatformTemplateSerializer, PlatformTemplateSubmissionSerializer
 
 # class NewTaskForm(forms.Form):
 #     task = forms.CharField(label="New Task")
@@ -67,7 +67,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def platform_choices(self, request):
         return Response([
-            {"value": value, "label": label} for value, label in Application._meta.get_field("platform").choices
+            {"value": value, "label": label} for value, label in PlatformTemplate._meta.get_field("name").choices
         ])
     
     @action(detail=False, methods=["get"])
@@ -98,3 +98,61 @@ class ToDoViewSet(viewsets.ModelViewSet):
         return Response([
             {"value": value, "label": label} for value, label in TAG_CHOICES
         ])
+
+class PlatformTemplateViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset=PlatformTemplate.objects.all()
+    serializer_class=PlatformTemplateSerializer
+
+class PlatformTemplateSubmissionViewSet(viewsets.ModelViewSet):
+    serializer_class = PlatformTemplateSubmissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return PlatformTemplateSubmission.objects.filter(user=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        platform_ids = request.data.get('platform_ids', [])
+        created_objects = []
+
+        for platform_id in platform_ids:
+            platform_obj = PlatformTemplate.objects.get(id=platform_id)
+
+            # Create PlatformTemplateSubmission object
+            obj, created = PlatformTemplateSubmission.objects.get_or_create(
+                user=request.user,
+                platform_template=platform_obj
+            )
+
+            if not created:
+                # This combination of user and platform somehow made it through even though already created,
+                # so skip
+                continue
+
+            created_objects.append(obj)
+
+            # Create new Application object
+            
+            # platform_obj resulting id is not our application id, that will be auto created later
+            # but it does have a name and category that I want to use in the newly created application
+            new_app = Application.objects.create(
+                user=request.user,
+                name=platform_obj.get_name_display(),
+                category=platform_obj.category,
+                platform_template=platform_obj
+            )
+
+            # Create new ToDo objects
+            platform_todos = platform_obj.todos.all()
+            for template_todo in platform_todos:
+                ToDo.objects.create(
+                    user=request.user,
+                    name=template_todo.name,
+                    tags=template_todo.tags,
+                    application=new_app
+                )
+
+        serializer = self.get_serializer(created_objects, many=True)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    # def perform_create(self, serializer):
+    #     serializer.save(user=self.request.user)
