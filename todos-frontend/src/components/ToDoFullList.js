@@ -106,6 +106,21 @@ function ToDoFullList() {
         });
     };
 
+    // Delete application
+    const deleteToDo = (id) => {
+        axios.delete(`/tasks/api/todos/${id}/`)
+        .then((response) => {
+            console.log("To do deleted", response.data);
+            setMode("");
+            setToDoData({});
+            fetchToDos();
+            setShowModal(false);
+        })
+        .catch((error) => {
+            console.error("Error deleting to do", error);
+        });
+    };
+
     const updateField = (id, field, value) => {
         // Update to do list first so it looks like a seamless update on the table
         setToDos((prevToDos) => 
@@ -184,6 +199,7 @@ function ToDoFullList() {
                         size="sm"
                         onClick={() => {
                             setMode("create");
+                            setToDoData({});
                             setShowModal(true);
                         }}
                     >
@@ -273,6 +289,13 @@ function ToDoFullList() {
                         </FloatingLabel>
                     </Modal.Body>
                     <Modal.Footer>
+                        {mode === "edit" && (<Button
+                            type="button"
+                            variant="danger"
+                            onClick={() => deleteToDo(toDoData.id)}
+                        >
+                            Delete
+                        </Button>)}
                         <Button
                             type="button"
                             variant="secondary"

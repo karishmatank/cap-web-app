@@ -94,6 +94,21 @@ function ApplicationList() {
         });
     };
 
+    // Delete application
+    const deleteApplication = (id) => {
+        axios.delete(`/tasks/api/applications/${id}/`)
+        .then((response) => {
+            console.log("Application deleted", response.data);
+            setMode("");
+            setAppData({});
+            setShowModal(false);
+            fetchApplications();
+        })
+        .catch((error) => {
+            console.error("Error deleting application", error);
+        });
+    };
+
     // Update a specific field inline in table
     const updateField = (id, field, value) => {
         // Update apps list before submitting patch request so that update looks seamless on the table
@@ -141,6 +156,7 @@ function ApplicationList() {
                         size="sm"
                         onClick={() => {
                             setMode("create");
+                            setAppData({});
                             setShowModal(true);
                         }}
                     >
@@ -208,6 +224,13 @@ function ApplicationList() {
                         </FloatingLabel>
                     </Modal.Body>
                     <Modal.Footer>
+                        {mode === "edit" && (<Button
+                            type="button"
+                            variant="danger"
+                            onClick={() => deleteApplication(appData.id)}
+                        >
+                            Delete
+                        </Button>)}
                         <Button
                             type="button"
                             variant="secondary"
