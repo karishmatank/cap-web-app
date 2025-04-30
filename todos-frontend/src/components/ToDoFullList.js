@@ -209,8 +209,13 @@ function ToDoFullList() {
             </div>
             
             {/* Modal for form that contains the fields we need to create a new to do entry */}
-            <Modal show={showModal} onHide={() => setShowModal(false)}>
-                <Form 
+            <Modal 
+                show={showModal} 
+                onHide={() => setShowModal(false)}
+                size="lg"
+            >
+                <Form
+                    className="modal-form" 
                     onSubmit={(event) => {
                         if (mode === "create") {
                             createToDo(event);
@@ -223,7 +228,7 @@ function ToDoFullList() {
                         <Modal.Title>{mode === "create" ? "Add New To Do" : "Edit To Do"}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <FloatingLabel controlId='floatingName' label="To Do Name" className="mb-3">
+                        <FloatingLabel controlId='floatingName' label="To Do Name" className="mb-3 form-field">
                             <Form.Control 
                                 type="text"
                                 name="name"
@@ -233,7 +238,7 @@ function ToDoFullList() {
                                 required
                             />
                         </FloatingLabel>
-                        <FloatingLabel controlId='floatingAppName' label="Application" className="mb-3">
+                        <FloatingLabel controlId='floatingAppName' label="Application" className="mb-3 form-field">
                             <Form.Select name="application" value={toDoData.application || ""} onChange={handleChange} required>
                                 <option value="" disabled>For Application:</option>
                                 {applicationOptions.map((option) => (
@@ -243,9 +248,9 @@ function ToDoFullList() {
                                 ))}
                             </Form.Select>
                         </FloatingLabel>
-                        <Form.Group controlId='floatingDueDate' className="mb-3">
+                        <Form.Group controlId='floatingDueDate' className="mb-3 form-field">
                             <Form.Label>Due Date <span role="img" aria-label="calendar">📅</span></Form.Label>
-                            <div ref={datePickerRef}>
+                            <div ref={datePickerRef} className="responsive-calendar">
                                 <DayPicker
                                     selected={toDoData.due_date ? parseDateFromString(toDoData.due_date) : null}
                                     onSelect={(date) => handleDateChange(date)}
@@ -255,7 +260,7 @@ function ToDoFullList() {
                                 />
                             </div>
                         </Form.Group>
-                        <Form.Group controlId='floatingTags' className="mb-3">
+                        <Form.Group controlId='floatingTags' className="mb-3 form-field">
                             <Accordion alwaysOpen>
                                 <Accordion.Item eventKey="0">
                                     <Accordion.Header>

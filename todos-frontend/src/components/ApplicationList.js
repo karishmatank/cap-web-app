@@ -166,8 +166,13 @@ function ApplicationList() {
             </div>
 
             {/* Modal for form that contains the fields we need to create a new application entry */}
-            <Modal show={showModal} onHide={() => setShowModal(false)}>
+            <Modal 
+                show={showModal} 
+                onHide={() => setShowModal(false)}
+                size="lg"
+            >
                 <Form 
+                    className="modal-form"
                     onSubmit={(event) => {
                         if (mode === "create") {
                             createApplication(event);
@@ -180,7 +185,7 @@ function ApplicationList() {
                         <Modal.Title>{mode === "create" ? "Add New Application" : "Edit Application"}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <FloatingLabel controlId='floatingCategory' label="Category" className="mb-3">
+                        <FloatingLabel controlId='floatingCategory' label="Category" className="mb-3 form-field">
                             <Form.Select name="category" value={appData.category || ""} onChange={handleChange} required>
                                 <option value="" disabled>Select a category</option>
                                 {categoryOptions.map((option) => (
@@ -190,7 +195,7 @@ function ApplicationList() {
                                 ))}
                             </Form.Select>
                         </FloatingLabel>
-                        <FloatingLabel controlId='floatingName' label="Application Name" className="mb-3">
+                        <FloatingLabel controlId='floatingName' label="Application Name" className="mb-3 form-field">
                             <Form.Control 
                                 type="text"
                                 name="name"
@@ -201,7 +206,7 @@ function ApplicationList() {
                             />
                         </FloatingLabel>
                         {appData.category === 'school' && (
-                            <FloatingLabel controlId='floatingPlatform' label="Platform, If Applicable" className="mb-3">
+                            <FloatingLabel controlId='floatingPlatform' label="Platform, If Applicable" className="mb-3 form-field">
                                 <Form.Select name="platform_template" value={appData.platform_template || ""} onChange={handleChange}>
                                     <option value="">Select a platform</option>
                                     {platformOptions.map((option) => (
