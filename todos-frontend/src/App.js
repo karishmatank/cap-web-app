@@ -29,15 +29,15 @@ function Layout() {
     <div className="main-wrapper">
       <Navbar />
       <div className="app-container">
-        <ApplicationPlatformSurvey />
+        <ApplicationPlatformSurvey currentUser={currentUser} />
         <Tabs
           defaultActiveKey="applications"
         >
           <Tab eventKey="applications" title="Applications">
-            <ApplicationList />
+            <ApplicationList currentUser={currentUser} />
           </Tab>
           <Tab eventKey="todos" title="To Dos">
-            <ToDoFullList />
+            <ToDoFullList currentUser={currentUser} />
           </Tab>
         </Tabs>
       </div>

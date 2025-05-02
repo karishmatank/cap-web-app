@@ -52,7 +52,22 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Application.objects.filter(user=self.request.user).order_by('status', 'name')
+        user = self.request.user
+        profile = user.userprofile
+
+        if profile.role == "admin":
+            return Application.objects.filter(user__userprofile__role="mentee").order_by('status', 'name')
+        elif profile.role == "mentor":
+            return Application.objects.filter(user__userprofile__mentors=user).order_by('status', 'name')
+        else:
+            return Application.objects.filter(user=self.request.user).order_by('status', 'name')
+    
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            profile = self.request.user.userprofile
+            if profile.role != "mentee":
+                self.permission_denied(self.request, message="Read-only for mentors/admins.")
+        return super().get_permissions()
     
     def perform_create(self, serializer):
         # Other fields get saved, but it won't save the user as that won't be specified in a form
@@ -82,14 +97,38 @@ class ToDoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return ToDo.objects.filter(user=self.request.user).order_by('due_date', 'application')
+        user = self.request.user
+        profile = user.userprofile
+
+        if profile.role == "admin":
+            return ToDo.objects.filter(user__userprofile__role="mentee").order_by('due_date', 'application')
+        elif profile.role == "mentor":
+            return ToDo.objects.filter(user__userprofile__mentors=user).order_by('due_date', 'application')
+        else:
+            return ToDo.objects.filter(user=self.request.user).order_by('due_date', 'application')
+    
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            profile = self.request.user.userprofile
+            if profile.role != "mentee":
+                self.permission_denied(self.request, message="Read-only for mentors/admins.")
+        return super().get_permissions()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
     @action(detail=False, methods=["get"])
     def application_choices(self, request):
-        queryset = Application.objects.filter(user=self.request.user, status="in_progress").order_by('name')
+        user = self.request.user
+        profile = user.userprofile
+        
+        if profile.role == "mentee":
+            queryset = Application.objects.filter(user=self.request.user, status="in_progress").order_by('name')
+        elif profile.role == "mentor":
+            queryset = Application.objects.filter(user__userprofile__mentors=user).order_by('name')
+        else:
+            queryset = Application.objects.filter(user__userprofile__role="mentee").order_by('name')
+        
         serializer = ApplicationChoiceSerializer(queryset, many=True)
         return Response(serializer.data)
         
@@ -108,7 +147,22 @@ class PlatformTemplateSubmissionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return PlatformTemplateSubmission.objects.filter(user=self.request.user)
+        user = self.request.user
+        profile = user.userprofile
+
+        if profile.role == "mentee":
+            return PlatformTemplateSubmission.objects.filter(user=self.request.user)
+        elif profile.role == "mentor":
+            return PlatformTemplateSubmission.objects.filter(user__userprofile__mentors=user)
+        else:
+            return PlatformTemplateSubmission.objects.filter(user__userprofile__role="mentee")
+        
+    def get_permissions(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            profile = self.request.user.userprofile
+            if profile.role != "mentee":
+                self.permission_denied(self.request, message="Read-only for mentors/admins.")
+        return super().get_permissions()
     
     def create(self, request, *args, **kwargs):
         platform_ids = request.data.get('platform_ids', [])

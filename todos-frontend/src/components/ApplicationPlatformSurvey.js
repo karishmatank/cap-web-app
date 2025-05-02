@@ -2,7 +2,7 @@ import axios from '../utils/axios';
 import { Alert, Button, Form } from 'react-bootstrap';
 import { useEffect, useState, React } from 'react';
 
-function ApplicationPlatformSurvey() {
+function ApplicationPlatformSurvey({ currentUser }) {
     const [showAlert, setShowAlert] = useState(true);
     const [platformChoices, setPlatformChoices] = useState([]);
     const [electedIds, setElectedIds] = useState([]);
@@ -74,7 +74,7 @@ function ApplicationPlatformSurvey() {
         window.location.reload();
     };
 
-    return showAlert && (
+    return currentUser?.role === "mentee" && showAlert && (
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
             <Alert key='primary' variant='primary' dismissible onClose={() => setShowAlert(false)}>
                 <Alert.Heading>

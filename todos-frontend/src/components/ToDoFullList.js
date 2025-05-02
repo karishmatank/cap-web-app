@@ -1,11 +1,11 @@
 import axios from '../utils/axios';
-import { useEffect, useState, React, useRef } from 'react';
-import { Modal, Button, Form, FloatingLabel, Table, Accordion } from 'react-bootstrap';
+import { useEffect, useState, React, useRef, useCallback } from 'react';
+import { Modal, Button, Form, FloatingLabel, Table, Accordion, Dropdown, DropdownButton } from 'react-bootstrap';
 import { EditableInput, EditableSelect, EditableTextArea, EditableDate } from '../utils/EditableFields';
 import { DayPicker } from 'react-day-picker';
 import "react-day-picker/dist/style.css";
 
-function ToDoFullList() {
+function ToDoFullList({ currentUser }) {
     const [mode, setMode] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [toDoData, setToDoData] = useState({});
@@ -20,6 +20,9 @@ function ToDoFullList() {
     const [applicationOptions, setApplicationOptions] = useState([]);
     const [tagOptions, setTagOptions] = useState([]);
     const datePickerRef = useRef(null);
+    const [menteeOptions, setMenteeOptions] = useState([]);
+    const [allUsersToDos, setAllUsersToDos] = useState([]);
+    const [selectedMenteeName, setSelectedMenteeName] = useState("");
 
     // Get application options specific to the user
     useEffect(() => {
@@ -40,7 +43,7 @@ function ToDoFullList() {
         });
     }, []);
 
-    const fetchToDos = () => {
+    const fetchToDos = useCallback(() => {
         axios.get(`/tasks/api/todos/`)
         .then((response) => {
             // Tags will come as a string, need to split into an array
@@ -49,16 +52,35 @@ function ToDoFullList() {
                 tags: todo.tags ? todo.tags.split(",") : []
             }));
 
-            setToDos(transformedToDos);
+            if (currentUser?.role === 'mentee') {
+                setToDos(transformedToDos);
+            } else {
+                setAllUsersToDos(transformedToDos);
+            }
         })
         .catch((error) => {
             console.error("Error getting to dos", error);
         });
-    };
+    }, [currentUser]);
 
     useEffect(() => {
         fetchToDos();
-    }, []);
+    }, [fetchToDos]);
+
+    // Create a list of unique users within apps. If mentee, there should only be themselves
+    useEffect(() => {
+        const mentees = allUsersToDos.map((todo) => todo.user);
+        const unique_mentees = [...new Map(mentees.map(item => [item.id, item])).values()];
+        setMenteeOptions(unique_mentees);
+    }, [allUsersToDos]);
+
+    // If user is a mentor or admin, if they select a mentee, show their app data
+    const filterMentee = (id) => {
+        setToDos(allUsersToDos.filter((app) => app.user.id === id));
+
+        const selected = menteeOptions.find(m => m.id === id);
+        setSelectedMenteeName(`${selected.first_name} ${selected.last_name}`);
+    };
 
     const createToDo = (event) => {
         // Prevent a full page reload by preventing default behavior. We handle the form ourselves
@@ -189,22 +211,56 @@ function ToDoFullList() {
         return new Date(year, month - 1, day); // month is zero indexed
     };
 
+    const getBadgeColor = (value, field_name) => {
+        if (value === "in_progress" && field_name === "status") return "secondary";
+        if (value === "submitted" && field_name === "status") return "success";
+        if (field_name === "category") return "info";
+        if (field_name === "school") return "primary";
+
+        return "light";
+    };
+
+    const getLabel = (field, value) => {
+        if (field === "application") {
+            return applicationOptions.find((option) => option.value === value).label;
+        }
+        
+        return "";
+    };
+
     return (
         <div className="todo-full-list-content container">
             <div className="todo-create d-flex justify-content-between align-items-center mb-3">
                 <div className="mt-4">
-                    <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        onClick={() => {
-                            setMode("create");
-                            setToDoData({});
-                            setShowModal(true);
-                        }}
-                    >
-                        + Add To Do
-                    </Button>
+                    {currentUser?.role === "mentee" ? (
+                        <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            onClick={() => {
+                                setMode("create");
+                                setToDoData({});
+                                setShowModal(true);
+                            }}
+                        >
+                            + Add To Do
+                        </Button>
+                    ) : (
+                        <DropdownButton 
+                            id="select-user-dropdown" 
+                            title={selectedMenteeName || "Select Mentee"} 
+                            onSelect={(eventKey) => {
+                                filterMentee(parseInt(eventKey));
+                            }}
+                            variant="primary"
+                        >
+                            {menteeOptions.map((mentee) => (
+                                <Dropdown.Item key={mentee.id} eventKey={mentee.id}>
+                                    {mentee.first_name} {mentee.last_name}
+                                </Dropdown.Item>
+                            ))}
+                        </DropdownButton>
+                    )}
                 </div>
             </div>
             
@@ -236,10 +292,17 @@ function ToDoFullList() {
                                 value={toDoData.name || ""}
                                 onChange={handleChange}
                                 required
+                                disabled={currentUser?.role !== "mentee"}
                             />
                         </FloatingLabel>
                         <FloatingLabel controlId='floatingAppName' label="Application" className="mb-3 form-field">
-                            <Form.Select name="application" value={toDoData.application || ""} onChange={handleChange} required>
+                            <Form.Select 
+                                name="application" 
+                                value={toDoData.application || ""} 
+                                onChange={handleChange} 
+                                required 
+                                disabled={currentUser?.role !== "mentee"}
+                            >
                                 <option value="" disabled>For Application:</option>
                                 {applicationOptions.map((option) => (
                                     <option key={option.value} value={option.value}>
@@ -257,6 +320,7 @@ function ToDoFullList() {
                                     mode="single"
                                     className="form-control"
                                     defaultMonth={toDoData.due_date ? parseDateFromString(toDoData.due_date) : undefined}
+                                    disabled={currentUser?.role !== "mentee"}
                                 />
                             </div>
                         </Form.Group>
@@ -276,6 +340,7 @@ function ToDoFullList() {
                                                 label={option.label}
                                                 checked={toDoData.tags?.includes(option.value) || false}
                                                 onChange={handleTagCheckboxChange}
+                                                disabled={currentUser?.role !== "mentee"}
                                             />
                                         ))}
                                     </Accordion.Body>
@@ -290,6 +355,7 @@ function ToDoFullList() {
                                 name="description"
                                 value={toDoData.description || ""}
                                 onChange={handleChange}
+                                disabled={currentUser?.role !== "mentee"}
                             />
                         </FloatingLabel>
                     </Modal.Body>
@@ -298,6 +364,7 @@ function ToDoFullList() {
                             type="button"
                             variant="danger"
                             onClick={() => deleteToDo(toDoData.id)}
+                            disabled={currentUser?.role !== "mentee"}
                         >
                             Delete
                         </Button>)}
@@ -305,18 +372,21 @@ function ToDoFullList() {
                             type="button"
                             variant="secondary"
                             onClick={() => setShowModal(false)}
+                            disabled={currentUser?.role !== "mentee"}
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             variant="primary"
+                            disabled={currentUser?.role !== "mentee"}
                         >
                             Submit
                         </Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
+
             <div className="todo-table">
                 <Table hover responsive style={{ tableLayout: "fixed", width: "100%", minWidth: "900px" }}>
                     <thead>
@@ -342,67 +412,115 @@ function ToDoFullList() {
                                         style={field.field_name === "name" ? { position: "relative" } : undefined}
                                     >
                                         {field.type === "text" ? (
-                                            <>
-                                            <EditableInput
-                                                value={todo[field.field_name]}
-                                                onSave={(newValue) => {
-                                                    updateField(todo.id, field.field_name, newValue);
-                                                }}
-                                                customWidth={field.field_name === "name" ? "80%": "100%"}
-                                            />
-                                            {field.field_name === "name" && (
-                                                <Button
-                                                    size='sm'
-                                                    className="edit-btn"
-                                                    type="button"
-                                                    variant='outline-secondary'
-                                                    onClick={() => {
-                                                        setMode("edit");
-                                                        setToDoData(todo);
-                                                        setShowModal(true);
+                                            currentUser?.role === "mentee" ? (
+                                                <>
+                                                <EditableInput
+                                                    value={todo[field.field_name]}
+                                                    onSave={(newValue) => {
+                                                        updateField(todo.id, field.field_name, newValue);
                                                     }}
-                                                >
-                                                    Edit
-                                                </Button>
-                                            )}
-                                            </>
+                                                    customWidth={field.field_name === "name" ? "80%": "100%"}
+                                                />
+                                                {field.field_name === "name" && (
+                                                    <Button
+                                                        size='sm'
+                                                        className="edit-btn"
+                                                        type="button"
+                                                        variant='outline-secondary'
+                                                        onClick={() => {
+                                                            setMode("edit");
+                                                            setToDoData(todo);
+                                                            setShowModal(true);
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                )}
+                                                </>
+                                            ) : (
+                                                <>
+                                                <span style={{ width: field.field_name === "name" ? "80%": "100%", height: "100%", display: "block" }}>
+                                                    {todo[field.field_name]}
+                                                </span>
+                                                {field.field_name === "name" && (
+                                                    <Button
+                                                        size='sm'
+                                                        className="edit-btn"
+                                                        type="button"
+                                                        variant='outline-secondary'
+                                                        onClick={() => {
+                                                            setToDoData(todo);
+                                                            setShowModal(true);
+                                                        }}
+                                                    >
+                                                        Open
+                                                    </Button>
+                                                )}
+                                                </>
+                                            )
                                         ) : field.type === 'select' ? (
-                                            <EditableSelect 
-                                                value={todo[field.field_name]}
-                                                field_name={field.field_name}
-                                                options={
-                                                    field.field_name === 'application' ? applicationOptions
-                                                    : []
-                                                }
-                                                onSave={(newValue) => {
-                                                    updateField(todo.id, field.field_name, newValue);
-                                                }}
-                                            />
+                                            currentUser?.role === "mentee" ? (
+                                                <EditableSelect 
+                                                    value={todo[field.field_name]}
+                                                    field_name={field.field_name}
+                                                    options={
+                                                        field.field_name === 'application' ? applicationOptions
+                                                        : []
+                                                    }
+                                                    onSave={(newValue) => {
+                                                        updateField(todo.id, field.field_name, newValue);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span 
+                                                    className={`badge rounded-pill text-bg-${getBadgeColor(todo[field.field_name], field.field_name)}`}
+                                                    style={{ width: "100%", height: "100%" }}
+                                                >
+                                                    {getLabel(field.field_name, todo[field.field_name])}
+                                                </span>
+                                            )
                                         ) : field.type === 'textarea' ? (
-                                            <EditableTextArea
-                                                value={todo[field.field_name]}
-                                                onSave={(newValue) => {
-                                                    updateField(todo.id, field.field_name, newValue);
-                                                }}
-                                            />
+                                            currentUser?.role === "mentee" ? (
+                                                <EditableTextArea
+                                                    value={todo[field.field_name]}
+                                                    onSave={(newValue) => {
+                                                        updateField(todo.id, field.field_name, newValue);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span style={{ width: "100%", height: "100%" }}>
+                                                    {todo[field.field_name]}
+                                                </span>
+                                            )
                                         ) : field.type === 'checkbox' ? (
-                                            <input 
-                                                type="checkbox"
-                                                onChange={(event) => {
-                                                    updateField(todo.id, field.field_name, event.target.checked);
-                                                }} 
-                                            />
+                                            currentUser?.role === "mentee" ? (
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={todo[field.field_name]}
+                                                    onChange={(event) => {
+                                                        updateField(todo.id, field.field_name, event.target.checked);
+                                                    }} 
+                                                />
+                                            ) : (
+                                                <input type="checkbox" checked={todo[field.field_name]} />
+                                            )
                                         ) : (
-                                            <EditableDate 
-                                                value={field.field_name === "due" ? 
-                                                    parseDateFromString(todo["due_date"]) : 
-                                                    parseDateFromString(todo[field.field_name])
-                                                }
-                                                onSave={(newValue) => {field.field_name === "due" ?
-                                                    updateField(todo.id, "due_date", newValue) :
-                                                    updateField(todo.id, field.field_name, newValue);
-                                                }}
-                                            />
+                                            currentUser?.role === "mentee" ? (
+                                                <EditableDate 
+                                                    value={field.field_name === "due" ? 
+                                                        parseDateFromString(todo["due_date"]) : 
+                                                        parseDateFromString(todo[field.field_name])
+                                                    }
+                                                    onSave={(newValue) => {field.field_name === "due" ?
+                                                        updateField(todo.id, "due_date", newValue) :
+                                                        updateField(todo.id, field.field_name, newValue);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span style={{ width: "100%", height: "100%" }}>
+                                                    {todo[field.field_name === "due" ? "due_date" : field.field_name]}
+                                                </span>
+                                            )
                                         )}
                                     </td>
                                 ))}

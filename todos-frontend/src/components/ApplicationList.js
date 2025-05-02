@@ -1,9 +1,9 @@
 import axios from '../utils/axios';
-import { useEffect, useState, React } from 'react';
-import { Modal, Button, Form, FloatingLabel, Table} from 'react-bootstrap';
+import { useEffect, useState, React, useCallback } from 'react';
+import { Modal, Button, Form, FloatingLabel, Table, Dropdown, DropdownButton} from 'react-bootstrap';
 import { EditableInput, EditableSelect, EditableTextArea } from '../utils/EditableFields';
 
-function ApplicationList() {
+function ApplicationList({ currentUser }) {
     const [apps, setApps] = useState([]);
     const [appData, setAppData] = useState({});
     const tableVisibleFields = [
@@ -18,6 +18,9 @@ function ApplicationList() {
     const [platformOptions, setPlatformOptions] = useState([]);
     const [statusOptions, setStatusOptions] = useState([]);
     const [mode, setMode] = useState("");
+    const [menteeOptions, setMenteeOptions] = useState([]);
+    const [allUsersApps, setAllUsersApps] = useState([]);
+    const [selectedMenteeName, setSelectedMenteeName] = useState("");
 
     // Get category and platform choices to use for the form
     useEffect(() => {
@@ -130,41 +133,100 @@ function ApplicationList() {
         });
     };
 
-    const fetchApplications = () => {
+    const fetchApplications = useCallback(() => {
         axios.get("/tasks/api/applications/")
         .then((response) => {
-            setApps(response.data);
+            // For mentors and admin, they'll receive more than one user's app
+            // Mentees will just receive their apps
+            if (currentUser?.role === 'mentee') {
+                setApps(response.data);
+            } else {
+                setAllUsersApps(response.data);
+            }
         })
         .catch((error) => {
             console.error("Error retrieving user apps", error);
         });
-    };
+    }, [currentUser]);
 
     // Get all applications that the user has started when they view the page
     // We already filter for the current user in our API view
     useEffect(() => {
         fetchApplications();
-    }, []);
+    }, [fetchApplications]);
+
+    // Create a list of unique users within apps. If mentee, there should only be themselves
+    useEffect(() => {
+        const mentees = allUsersApps.map((app) => app.user);
+        const unique_mentees = [...new Map(mentees.map(item => [item.id, item])).values()];
+        setMenteeOptions(unique_mentees);
+    }, [allUsersApps]);
+
+    // If user is a mentor or admin, if they select a mentee, show their app data
+    const filterMentee = (id) => {
+        setApps(allUsersApps.filter((app) => app.user.id === id));
+
+        const selected = menteeOptions.find(m => m.id === id);
+        setSelectedMenteeName(`${selected.first_name} ${selected.last_name}`);
+    };
+
+    const getBadgeColor = (value, field_name) => {
+        if (value === "in_progress" && field_name === "status") return "secondary";
+        if (value === "submitted" && field_name === "status") return "success";
+        if (field_name === "category") return "info";
+        if (field_name === "school") return "primary";
+
+        return "light";
+    };
+
+    const getLabel = (field, value) => {
+        if (field === "status") {
+            return statusOptions.find((option) => option.value === value).label;
+        } else if (field === "category") {
+            return categoryOptions.find((option) => option.value === value).label;
+        } else if (field === "platform_template") {
+            return platformOptions.find((option) => parseInt(option.id) === parseInt(value)).name;
+        } 
+        
+        return "";
+    };
 
     return (
         <div className="application-list-content container">
             <div className="application-create d-flex justify-content-between align-items-center mb-3">
                 <div className="mt-4">
-                    <Button
-                        type="button"
-                        variant="primary"
-                        size="sm"
-                        onClick={() => {
-                            setMode("create");
-                            setAppData({});
-                            setShowModal(true);
-                        }}
-                    >
-                        + Add Application
-                    </Button>
+                    {currentUser?.role === "mentee" ? (
+                        <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            onClick={() => {
+                                setMode("create");
+                                setAppData({});
+                                setShowModal(true);
+                            }}
+                        >
+                            + Add Application
+                        </Button>
+                    ) : (
+                        <DropdownButton 
+                            id="select-user-dropdown" 
+                            title={selectedMenteeName || "Select Mentee"} 
+                            onSelect={(eventKey) => {
+                                filterMentee(parseInt(eventKey));
+                            }}
+                            variant="primary"
+                        >
+                            {menteeOptions.map((mentee) => (
+                                <Dropdown.Item key={mentee.id} eventKey={mentee.id}>
+                                    {mentee.first_name} {mentee.last_name}
+                                </Dropdown.Item>
+                            ))}
+                        </DropdownButton>
+                    )}
                 </div>
             </div>
-
+            
             {/* Modal for form that contains the fields we need to create a new application entry */}
             <Modal 
                 show={showModal} 
@@ -182,11 +244,19 @@ function ApplicationList() {
                     }}
                 >
                     <Modal.Header closeButton>
-                        <Modal.Title>{mode === "create" ? "Add New Application" : "Edit Application"}</Modal.Title>
+                        <Modal.Title>
+                            {mode === "create" ? "Add New Application" : "Edit Application"}
+                        </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <FloatingLabel controlId='floatingCategory' label="Category" className="mb-3 form-field">
-                            <Form.Select name="category" value={appData.category || ""} onChange={handleChange} required>
+                            <Form.Select 
+                                name="category" 
+                                value={appData.category || ""} 
+                                onChange={handleChange} 
+                                required
+                                disabled={currentUser?.role !== "mentee"}
+                            >
                                 <option value="" disabled>Select a category</option>
                                 {categoryOptions.map((option) => (
                                     <option key={option.value} value={option.value}>
@@ -203,11 +273,17 @@ function ApplicationList() {
                                 value={appData.name || ""}
                                 onChange={handleChange}
                                 required
+                                disabled={currentUser?.role !== "mentee"}
                             />
                         </FloatingLabel>
                         {appData.category === 'school' && (
                             <FloatingLabel controlId='floatingPlatform' label="Platform, If Applicable" className="mb-3 form-field">
-                                <Form.Select name="platform_template" value={appData.platform_template || ""} onChange={handleChange}>
+                                <Form.Select 
+                                    name="platform_template" 
+                                    value={appData.platform_template || ""} 
+                                    onChange={handleChange}
+                                    disabled={currentUser?.role !== "mentee"}
+                                >
                                     <option value="">Select a platform</option>
                                     {platformOptions.map((option) => (
                                         <option key={option.id} value={option.id}>
@@ -225,6 +301,7 @@ function ApplicationList() {
                                 name="notes"
                                 value={appData.notes || ""}
                                 onChange={handleChange}
+                                disabled={currentUser?.role !== "mentee"}
                             />
                         </FloatingLabel>
                     </Modal.Body>
@@ -233,6 +310,7 @@ function ApplicationList() {
                             type="button"
                             variant="danger"
                             onClick={() => deleteApplication(appData.id)}
+                            disabled={currentUser?.role !== "mentee"}
                         >
                             Delete
                         </Button>)}
@@ -240,12 +318,14 @@ function ApplicationList() {
                             type="button"
                             variant="secondary"
                             onClick={() => setShowModal(false)}
+                            disabled={currentUser?.role !== "mentee"}
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             variant="primary"
+                            disabled={currentUser?.role !== "mentee"}
                         >
                             Submit
                         </Button>
@@ -278,51 +358,88 @@ function ApplicationList() {
                                         style={field.field_name === "name" ? { position: "relative" } : undefined}
                                     >
                                         {field.type === "text" ? (
-                                            <>
-                                            <EditableInput
-                                                value={app[field.field_name]}
-                                                onSave={(newValue) => {
-                                                    updateField(app.id, field.field_name, newValue);
-                                                }}
-                                                customWidth={field.field_name === "name" ? "80%": "100%"}
-                                            />
-                                            {field.field_name === "name" && (
-                                                <Button
-                                                    size='sm'
-                                                    className="edit-btn"
-                                                    type="button"
-                                                    variant='outline-secondary'
-                                                    onClick={() => {
-                                                        setMode("edit");
-                                                        setAppData(app);
-                                                        setShowModal(true);
+                                            currentUser?.role === "mentee" ? (
+                                                <>
+                                                <EditableInput
+                                                    value={app[field.field_name]}
+                                                    onSave={(newValue) => {
+                                                        updateField(app.id, field.field_name, newValue);
                                                     }}
-                                                >
-                                                    Edit
-                                                </Button>
-                                            )}
-                                            </>
+                                                    customWidth={field.field_name === "name" ? "80%": "100%"}
+                                                />
+                                                {field.field_name === "name" && (
+                                                    <Button
+                                                        size='sm'
+                                                        className="edit-btn"
+                                                        type="button"
+                                                        variant='outline-secondary'
+                                                        onClick={() => {
+                                                            setMode("edit");
+                                                            setAppData(app);
+                                                            setShowModal(true);
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                )}
+                                                </>
+                                            ) : (
+                                                <>
+                                                <span style={{ width: field.field_name === "name" ? "80%": "100%", height: "100%", display: "block" }}>
+                                                    {app[field.field_name]}
+                                                </span>
+                                                {field.field_name === "name" && (
+                                                    <Button
+                                                        size='sm'
+                                                        className="edit-btn"
+                                                        type="button"
+                                                        variant='outline-secondary'
+                                                        onClick={() => {
+                                                            setAppData(app);
+                                                            setShowModal(true);
+                                                        }}
+                                                    >
+                                                        Open
+                                                    </Button>
+                                                )}
+                                                </>
+                                            )
                                         ) : field.type === 'select' ? (
-                                            <EditableSelect 
-                                                value={app[field.field_name]}
-                                                field_name={field.field_name}
-                                                options={
-                                                    field.field_name === 'status' ? statusOptions
-                                                    : field.field_name === 'category' ? categoryOptions
-                                                    : field.field_name === 'platform_template' ? platformOptions
-                                                    : []
-                                                }
-                                                onSave={(newValue) => {
-                                                    updateField(app.id, field.field_name, newValue);
-                                                }}
-                                            />
+                                            currentUser?.role === "mentee" ? (
+                                                <EditableSelect 
+                                                    value={app[field.field_name]}
+                                                    field_name={field.field_name}
+                                                    options={
+                                                        field.field_name === 'status' ? statusOptions
+                                                        : field.field_name === 'category' ? categoryOptions
+                                                        : field.field_name === 'platform_template' ? platformOptions
+                                                        : []
+                                                    }
+                                                    onSave={(newValue) => {
+                                                        updateField(app.id, field.field_name, newValue);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span 
+                                                    className={`badge rounded-pill text-bg-${getBadgeColor(app[field.field_name], field.field_name)}`}
+                                                    style={{ width: "100%", height: "100%" }}
+                                                >
+                                                    {getLabel(field.field_name, app[field.field_name])}
+                                                </span>
+                                            )  
                                         ) : (
-                                            <EditableTextArea
-                                                value={app[field.field_name]}
-                                                onSave={(newValue) => {
-                                                    updateField(app.id, field.field_name, newValue);
-                                                }}
-                                            />
+                                            currentUser?.role === "mentee" ? (
+                                                <EditableTextArea
+                                                    value={app[field.field_name]}
+                                                    onSave={(newValue) => {
+                                                        updateField(app.id, field.field_name, newValue);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span style={{ width: "100%", height: "100%" }}>
+                                                    {app[field.field_name]}
+                                                </span>
+                                            )
                                         )}
                                     </td>
                                 ))}
