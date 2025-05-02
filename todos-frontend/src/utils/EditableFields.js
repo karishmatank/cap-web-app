@@ -284,7 +284,7 @@ export function EditableDate({ value, onSave }) {
                 onClick={openCalendar}
                 className='form-control editable-input'
             >
-                {draft ? draft.toLocaleDateString() : <i className="placeholder-text">Click to set due date</i>}
+                {draft ? draft.toLocaleDateString() : <i className="placeholder-text" style={{ color: "#ff4545" }}>Click to set due date</i>}
             </span>
             {isEditing && createPortal(
                 <div ref={calendarRef} style={{
