@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'chat',
     'core',
     'workshops',
+    'calendar_app',
     'rest_framework',
     'widget_tweaks',
     'django.contrib.admin',
@@ -168,5 +169,7 @@ CHANNEL_LAYERS = {
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
     'https://my-future-production-domain.com' # TODO: Fix this once in production
 ]

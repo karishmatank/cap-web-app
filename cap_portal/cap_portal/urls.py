@@ -24,5 +24,6 @@ urlpatterns = [
     path('users/', include("users.urls", namespace='users')),
     path('chat/', include("chat.urls")),
     path('core/', include("core.urls")),
-    path('workshops/', include("workshops.urls"))
+    path('workshops/', include("workshops.urls")),
+    path('calendar/', include("calendar_app.urls"))
 ]
