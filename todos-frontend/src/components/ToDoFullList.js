@@ -1,6 +1,6 @@
 import axios from '../utils/axios';
 import { useEffect, useState, React, useRef, useCallback } from 'react';
-import { Modal, Button, Form, FloatingLabel, Table, Accordion, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Modal, Button, Form, FloatingLabel, Table, Accordion, Dropdown, DropdownButton, Popover, OverlayTrigger } from 'react-bootstrap';
 import { EditableInput, EditableSelect, EditableTextArea, EditableDate } from '../utils/EditableFields';
 import { DayPicker } from 'react-day-picker';
 import "react-day-picker/dist/style.css";
@@ -18,17 +18,22 @@ function ToDoFullList({ currentUser }) {
         {'field_name': 'description', 'type': 'textarea', 'width': '30%'}
     ];
     const [applicationOptions, setApplicationOptions] = useState([]);
+    const [completedOptions, setCompletedOptions] = useState([{ value: true, label: "Completed" }, { value: false, label: "Outstanding" }]);
     const [tagOptions, setTagOptions] = useState([]);
     const datePickerRef = useRef(null);
     const [menteeOptions, setMenteeOptions] = useState([]);
     const [allUsersToDos, setAllUsersToDos] = useState([]);
     const [selectedMenteeName, setSelectedMenteeName] = useState("");
+    const [filteredToDos, setFilteredToDos] = useState([]);
+    const [selectedApplications, setSelectedApplications] = useState([]);
+    const [selectedCompleted, setSelectedCompleted] = useState([false]);
 
     // Get application options specific to the user
     useEffect(() => {
         axios.get(`/tasks/api/todos/application_choices/`)
         .then((response) => {
             setApplicationOptions(response.data);
+            setSelectedApplications(response.data.map((item) => item.value));
         })
         .catch((error) => {
             console.error("Error fetching application options", error);
@@ -54,6 +59,7 @@ function ToDoFullList({ currentUser }) {
 
             if (currentUser?.role === 'mentee') {
                 setToDos(transformedToDos);
+                setFilteredToDos(transformedToDos);
             } else {
                 setAllUsersToDos(transformedToDos);
             }
@@ -76,10 +82,96 @@ function ToDoFullList({ currentUser }) {
 
     // If user is a mentor or admin, if they select a mentee, show their app data
     const filterMentee = (id) => {
-        setToDos(allUsersToDos.filter((app) => app.user.id === id));
+        const mentee_todos = allUsersToDos.filter((app) => app.user.id === id);
+        setToDos(mentee_todos);
+        setFilteredToDos(mentee_todos);
 
         const selected = menteeOptions.find(m => m.id === id);
         setSelectedMenteeName(`${selected.first_name} ${selected.last_name}`);
+    };
+
+    // If a user filtered by a certain column's values, show only those to dos
+    const filterColumn = (event, field, option) => {
+        // Update selected filters array for field + filter to dos
+        const updater = (prev, key) => {
+            const value = key === "id" ? option.id : option.value;
+
+            if (event.target.checked) {
+                return prev.includes(value) ? prev : [...prev, value];
+            } else {
+                return prev.filter((item) => item !== value);
+            }
+        }
+
+        if (field === "application") {
+            setSelectedApplications((prev) => updater(prev, "value"));
+        } else {
+            setSelectedCompleted((prev) => updater(prev, "value"));
+        }
+    };
+
+    // Need to update filtered apps list in a separate useEffect rather than in filterColumn b/c otherwise 
+    // it will use the old state of selectedApplication and co
+    useEffect(() => {
+        const new_filtered_to_dos = toDos.filter((item) => selectedApplications.includes(item.application) &&
+                                                           selectedCompleted.includes(item.completed));
+        setFilteredToDos(new_filtered_to_dos);
+    }, [toDos, selectedApplications, selectedCompleted]);
+
+    const filterDropdown = (field_name, filterOptions, selectedFilters) => {
+        
+        const popover = (
+            <Popover id={`popover-${field_name}`}>
+                <Popover.Body style={{ overflowY: "auto", padding: "10px" }}>
+                    {filterOptions.map(option => {
+                        // Because Form.Check automatically converts the value (option.value) to a string, we can't do
+                        // checked={selectedFilters.includes(option.value)} because that tries to check "true" vs true (bool)
+                        const value = option.value ?? option.id; // This is still boolean
+                        const isChecked = selectedFilters.includes(value);
+
+                        return (
+                            <Form.Check 
+                                key={value.toString()}
+                                type="checkbox"
+                                label={option.label ?? option.name}
+                                value={value}
+                                checked={isChecked}
+                                onChange={(event) => filterColumn(event, field_name, option)}
+                            />
+                        );
+                    })}
+                </Popover.Body>
+            </Popover>
+        );
+
+        return (
+            <OverlayTrigger
+                trigger="click"
+                placement="bottom"
+                overlay={popover}
+                rootClose
+            >
+                {field_name === "application" ? (
+                    <Button 
+                        variant="light" 
+                        size="sm" 
+                        className="p-1 ms-2" 
+                        style={{ lineHeight: 1 }}
+                    >
+                        <i className="bi bi-funnel-fill"></i>
+                    </Button>
+                ) : (
+                    <Button 
+                        variant="outline-secondary" 
+                        size="sm" 
+                        className="p-1" 
+                        style={{ lineHeight: 1 }}
+                    >
+                        <span>✅</span>
+                    </Button>
+                )}
+            </OverlayTrigger>
+        );
     };
 
     const createToDo = (event) => {
@@ -398,13 +490,18 @@ function ToDoFullList({ currentUser }) {
                                     key={`header-${field.field_name}`}
                                     style={{ width: field.width }}
                                 >
-                                    {field.field_name === "completed" ? "✅" : field.field_name}
+                                    {field.field_name === "completed" ? "" : field.field_name}
+
+                                    {["application", "completed"].includes(field.field_name) && (
+                                        field.field_name === "completed" ? filterDropdown("completed", completedOptions, selectedCompleted) :
+                                        filterDropdown("application", applicationOptions, selectedApplications)
+                                    )}
                                 </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>    
-                        {toDos.map((todo) => (
+                        {filteredToDos.map((todo) => (
                             <tr key={todo.id}>
                                 {tableVisibleFields.map((field) => (
                                     <td 

@@ -5,7 +5,7 @@
         { "name": "Directory", "path": "http://localhost:3001/", "isReact": true, "method": "get" },
         { "name": "Workshop Materials", "path": "http://localhost:8000/workshops/", "isReact": false, "method": "get"}
     ]},
-    { "name": "Applications", "path": "#", "isReact": false, "method": "get"},
+    { "name": "Applications", "path": "http://localhost:3002/", "isReact": true, "method": "get"},
     { "name": "Settings", "children": [
         { "name": "Change Password", "path": "http://localhost:8000/users/change-password/", "isReact": false, "method": "get" },
         { "name": "Edit Profile", "path": "http://localhost:8000/users/edit-profile/", "isReact": false, "method": "get"}

@@ -1,6 +1,6 @@
 import axios from '../utils/axios';
 import { useEffect, useState, React, useCallback } from 'react';
-import { Modal, Button, Form, FloatingLabel, Table, Dropdown, DropdownButton} from 'react-bootstrap';
+import { Modal, Button, Form, FloatingLabel, Table, Dropdown, DropdownButton, OverlayTrigger, Popover } from 'react-bootstrap';
 import { EditableInput, EditableSelect, EditableTextArea } from '../utils/EditableFields';
 
 function ApplicationList({ currentUser }) {
@@ -21,12 +21,17 @@ function ApplicationList({ currentUser }) {
     const [menteeOptions, setMenteeOptions] = useState([]);
     const [allUsersApps, setAllUsersApps] = useState([]);
     const [selectedMenteeName, setSelectedMenteeName] = useState("");
+    const [filteredApps, setFilteredApps] = useState([]);
+    const [selectedStatuses, setSelectedStatuses] = useState([]);
+    const [selectedCategories, setSelectedCategories] = useState([]);
+    const [selectedPlatforms, setSelectedPlatforms] = useState([]);
 
     // Get category and platform choices to use for the form
     useEffect(() => {
         axios.get("/tasks/api/applications/category_choices/")
         .then((response) => {
             setCategoryOptions(response.data);
+            setSelectedCategories(response.data.map((item) => item.value));
         })
         .catch((error) => {
             console.error("Error retrieving application categories", error);
@@ -36,6 +41,7 @@ function ApplicationList({ currentUser }) {
         .then((response) => {
             const extractedOptions = response.data.map((item) => item.platform_template);
             setPlatformOptions(extractedOptions);
+            setSelectedPlatforms(extractedOptions.map((item) => item.id));
         })
         .catch((error) => {
             console.error("Error retrieving application school platforms", error);
@@ -44,6 +50,7 @@ function ApplicationList({ currentUser }) {
         axios.get("/tasks/api/applications/status_choices/")
         .then((response) => {
             setStatusOptions(response.data);
+            setSelectedStatuses(response.data.map((item) => item.value));
         })
         .catch((error) => {
             console.error("Error retrieving application status options", error);
@@ -140,6 +147,7 @@ function ApplicationList({ currentUser }) {
             // Mentees will just receive their apps
             if (currentUser?.role === 'mentee') {
                 setApps(response.data);
+                setFilteredApps(response.data);
             } else {
                 setAllUsersApps(response.data);
             }
@@ -164,10 +172,81 @@ function ApplicationList({ currentUser }) {
 
     // If user is a mentor or admin, if they select a mentee, show their app data
     const filterMentee = (id) => {
-        setApps(allUsersApps.filter((app) => app.user.id === id));
+        const mentee_apps = allUsersApps.filter((app) => app.user.id === id);
+        setApps(mentee_apps);
+        setFilteredApps(mentee_apps);
 
         const selected = menteeOptions.find(m => m.id === id);
         setSelectedMenteeName(`${selected.first_name} ${selected.last_name}`);
+    };
+
+    // If a user filtered by a certain column's values, show only those apps
+    const filterColumn = (event, field, option) => {
+        // Update selected filters array for field + filter apps
+        const updater = (prev, key) => {
+            const value = key === "id" ? option.id : option.value;
+
+            if (event.target.checked) {
+                return prev.includes(value) ? prev : [...prev, value];
+            } else {
+                return prev.filter((item) => item !== value);
+            }
+        }
+
+        if (field === "status") {
+            setSelectedStatuses((prev) => updater(prev, "value"));
+        } else if (field === "category") {
+            setSelectedCategories((prev) => updater(prev, "value"));
+        } else {
+            setSelectedPlatforms((prev) => updater(prev, "id"));
+        }
+    };
+    
+    // Need to update filtered apps list in a separate useEffect rather than in filterColumn b/c otherwise 
+    // it will use the old state of selectedStatus and co
+    useEffect(() => {
+        const new_filtered_apps = apps.filter((item) => selectedStatuses.includes(item.status) && 
+                                                        selectedCategories.includes(item.category) &&
+                                                        selectedPlatforms.includes(item.platform_template));
+        setFilteredApps(new_filtered_apps);
+    }, [apps, selectedStatuses, selectedCategories, selectedPlatforms]);
+
+    const filterDropdown = (field_name, filterOptions, selectedFilters) => {
+
+        const popover = (
+            <Popover id={`popover-${field_name}`}>
+                <Popover.Body style={{ overflowY: "auto", padding: "10px" }}>
+                    {filterOptions.map(option => (
+                        <Form.Check 
+                            key={option.value ? option.value : option.id}
+                            type="checkbox"
+                            label={option.label ? option.label : option.name}
+                            value={option.value ? option.value : option.id}
+                            checked={selectedFilters.includes(option.value ? option.value : option.id)}
+                            onChange={(event) => filterColumn(event, field_name, option)}
+                        />
+                    ))}
+                </Popover.Body>
+            </Popover>
+        );
+
+        return (
+            <OverlayTrigger
+                trigger="click"
+                placement="bottom"
+                overlay={popover}
+                rootClose
+            >
+                <Button 
+                    variant="light" 
+                    size="sm" 
+                    className="p-1 ms-2" 
+                    style={{ lineHeight: 1 }}
+                >
+                    <i className="bi bi-funnel-fill"></i>
+                </Button>
+            </OverlayTrigger>
+        );
     };
 
     const getBadgeColor = (value, field_name) => {
@@ -345,12 +424,18 @@ function ApplicationList({ currentUser }) {
                                     style={{ width: field.width }}
                                 >
                                     {field.field_name === 'platform_template' ? "Platform" : field.field_name}
+
+                                    {["status", "category", "platform_template"].includes(field.field_name) && (
+                                        field.field_name === "status" ? filterDropdown("status", statusOptions, selectedStatuses) :
+                                        field.field_name === "category" ? filterDropdown("category", categoryOptions, selectedCategories) :
+                                        filterDropdown("platform_template", platformOptions, selectedPlatforms)
+                                    )}
                                 </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {apps.map((app) => (
+                        {filteredApps.map((app) => (
                             <tr key={app.id}>
                                 {tableVisibleFields.map((field) => (
                                     <td 
