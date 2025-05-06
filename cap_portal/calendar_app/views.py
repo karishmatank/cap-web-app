@@ -51,7 +51,10 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
                     "end": e.end,
                     "calendarId": e.category,
                     "category": "time" if not e.isAllDay else "allday",
-                    "participants": list(e.participants.values_list('id', flat=True)),
+                    "participants": [
+                        {'id': u.id, 'full_name': f'{u.first_name} {u.last_name}'}
+                        for u in e.participants.all()
+                    ],
                     "isAllday": e.isAllDay,
                     "isReadOnly": False,
                     "description": e.description
