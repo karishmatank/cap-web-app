@@ -64,7 +64,7 @@ function refreshCalendar(calendar) {
 document.addEventListener("DOMContentLoaded", () => {
     currentSchedule = null;
 
-    // Search for users to add as participants
+    // Initialize ts to later search for users to add as participants
     ts = new TomSelect("#event-participants", {
         valueField: "id",
         labelField: "full_name",
@@ -112,7 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         ],
         selectable: true,
-        taskView: ['milestone']
+    });
+    calendar.setOptions({
+        week: {
+            taskView: false
+        }
     });
 
     // Register select event for creating new events
@@ -146,6 +150,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Edit event already on the calendar
     calendar.on('clickEvent', ({ event }) => {
+
+        console.log(event);
+
         const readOnly = event.isReadOnly;
         
         // For milestones only, which are set as read only but we want to open the modal still 
@@ -195,6 +202,12 @@ document.addEventListener("DOMContentLoaded", () => {
         submitBtn.classList.toggle('d-none', readOnly); // Hide if view only
         submitBtn.textContent = readOnly ? '' : "Edit Event";
 
+        // Disable delete button
+        const deleteBtn = document.getElementById('event-delete-button');
+        deleteBtn.classList.toggle('d-none', readOnly); // Hide if view only
+        deleteBtn.classList.toggle('d-block', !readOnly); // Default in HTML is d-none. I want to show if it is read only
+        deleteBtn.textContent = readOnly ? '' : "Delete Event";
+
         // Disable other inputs and selects
         document
             .querySelectorAll('#add-event-form input, #add-event-form textarea, #add-event-form select')
@@ -206,6 +219,45 @@ document.addEventListener("DOMContentLoaded", () => {
         const modal = new bootstrap.Modal(document.getElementById("addEventModal"));
         modal.show();
         calendar.clearGridSelections();
+
+    });
+
+    calendar.on('beforeUpdateEvent', async ({ event, changes }) => {
+        if (event.isReadOnly) return false;
+
+        let startISO;
+        let endISO;
+        
+        if (!event.isAllday) {
+            startISO = changes.start ? ensureOffset(changes.start.toDate().toISOString()) : null;
+            endISO = changes.end ? ensureOffset(changes.end.toDate().toISOString()) : null;
+        } else {
+            // We'll get a start that has a time of 00:00 and an end that has a time of 23:59. I just need the date
+            startISO = changes.start ? ensureOffset(changes.start.toDate().toLocaleDateString('en-CA')) : null;
+            endISO = null;
+        }
+        
+        // Get updates
+        const body = {};
+        if (startISO) body.start = startISO;
+        if (endISO) body.end = endISO;
+
+        try {
+            const res = await fetch(`/calendar/api/events/${event.id.split("-")[1]}/`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrf
+                },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) throw new Error(await res.text());
+        } catch (err) {
+            console.error("Update failed:", err);
+            return false;
+        }
+
+        refreshCalendar(calendar);
 
     });
 
@@ -287,6 +339,29 @@ document.getElementById("add-event-form").addEventListener("submit", (event) => 
             return response.json();
         })
         .then((savedEvent) => {
+            currentSchedule = null;
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
+            modal.hide();
+            refreshCalendar(window.tuiCalendarInstance);
+            calendar.clearGridSelections();
+        });
+    }
+});
+
+// Delete event
+document.getElementById("event-delete-button").addEventListener("click", (event) => {
+    event.preventDefault();
+
+    // currentSchedule should have the event details
+    if (currentSchedule) {
+        fetch(`/calendar/api/events/${currentSchedule.id.split("-")[1]}/`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": csrf
+            }
+        })
+        .then((response) => {
+            if (!response.ok) throw new Error("Delete failed");
             currentSchedule = null;
             const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
             modal.hide();
@@ -396,7 +471,14 @@ document.getElementById("addEventModal").addEventListener("hidden.bs.modal", () 
 
     // Enable event submit button
     const submitBtn = document.getElementById('event-submit-button');
+    submitBtn.style.display = "block";
     submitBtn.textContent = '';
+
+    // Enable event delete button
+    const deleteBtn = document.getElementById('event-delete-button');
+    deleteBtn.classList.remove('d-block');
+    deleteBtn.classList.add('d-none');
+    deleteBtn.textContent = '';
 
     // Enable other inputs and selects
     document
