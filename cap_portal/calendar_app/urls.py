@@ -8,5 +8,6 @@ router = DefaultRouter()
 router.register(r'events', views.CalendarEventViewSet, basename='events')
 
 urlpatterns = [
-    path('api/', include(router.urls))
+    path('api/', include(router.urls)),
+    path('', views.calendar_view, name="calendar_view")
 ]

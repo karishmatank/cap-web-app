@@ -1,0 +1,496 @@
+{% extends "calendar_app/layout.html" %}
+
+{% block title %}
+    My Events
+{% endblock %}
+
+{% block body %}
+    <div class="calendar-container">
+        <h2>My Events and To Dos</h2>
+        <div class="calendar-toolbar d-flex justify-content-between align-items-center mb-3 flex-wrap">
+            <div class="btn-group mb-2">
+                <button id="prevBtn" class="btn btn-outline-primary">←</button>
+                <button id="todayBtn" class="btn btn-outline-primary">Today</button>
+                <button id="nextBtn" class="btn btn-outline-primary">→</button>
+            </div>
+
+            <h4 id="calendar-date-display" class="mb-2 text-center flex-grow-1">Loading...</h4>
+
+            <div class="btn-group mb-2">
+                <button class="btn btn-outline-secondary" data-view="month">Month</button>
+                <button class="btn btn-outline-secondary" data-view="week">Week</button>
+                <button class="btn btn-outline-secondary" data-view="day">Day</button>
+            </div>
+        </div>
+        <div id="calendar"></div>
+    </div>
+    
+    <div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventModalLabel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="add-event-form">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addEventModalLabel"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3" id="readonly-message"></div>
+                        <div class="mb-3">
+                            <label for="event-category" class="form-label">Category</label>
+                            <select id="event-category" name="category" class="form-select">
+                                {% for value, label in category_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="event-title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="event-title" name="title" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="event-description" class="form-label">Description (optional)</label>
+                            <textarea class="form-control" id="event-description" name="description" rows=2></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="event-date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="event-date" name="date">
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="all-day-checkbox">
+                            <label class="form-check-label" for="all-day-checkbox">
+                                All-Day Event
+                            </label>
+                        </div>
+
+                        <div id="end-date-group" style="display: block;">
+                            <div class="mb-3">
+                                <label for="event-start-time" class="form-label">Start Time (optional)</label>
+                                <input type="time" class="form-control" id="event-start-time" name="start-time">
+                            </div>
+                            <div class="mb-3">
+                                <label for="event-end" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="event-end" name="end">
+                            </div>
+                            <div class="mb-3">
+                                <label for="event-end-time" class="form-label">End Time (optional)</label>
+                                <input type="time" class="form-control" id="event-end-time" name="end-time">
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="invite-checkbox">
+                            <label class="form-check-label" for="invite-checkbox">
+                                Invite other participants
+                            </label>
+                        </div>
+
+                        <div class="mb-3" id="participants-group" style="display: none;">
+                            <select id="event-participants" placeholder="Search for users..." multiple></select>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" id="event-submit-button"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let calendar;
+        let currentSchedule = null;
+
+        function ensureOffset(isoStr) {
+            if (!isoStr) return isoStr;
+
+            // 1. Already has Z or +/-HH:MM
+            if (/[Zz]|[+-]\d{2}:\d{2}$/.test(isoStr)) return isoStr;
+
+            // 2. Date-only means add clock + offset
+            if (!isoStr.includes('T')) isoStr += "T00:00:00";
+
+            const pad = n => String(n).padStart(2, '0');
+            const off = new Date(isoStr).getTimezoneOffset(); // minutes west of UTC
+            const sign = off <= 0 ? "+" : "-";
+            const hh = pad(Math.floor(Math.abs(off) / 60));
+            const mm = pad(Math.abs(off) % 60);
+
+            return `${isoStr}${sign}${hh}:${mm}`;
+        }
+
+        function refreshCalendar(calendar) {
+            // Load events from API
+            fetch('/calendar/api/events/calendar-data/')
+            .then((response) => response.json())
+            .then((events) => {
+                calendar.clear();
+                const formatted = events.map(ev => ({
+                    id: ev.id,
+                    calendarId: ev.calendarId,
+                    title: ev.name,
+                    category: ev.category,
+                    isAllday: ev.isAllday,
+                    isReadOnly: ev.isReadOnly,
+                    start: ensureOffset(ev.start),
+                    end: ev.end ? ensureOffset(ev.end) : ensureOffset(ev.start),
+                    raw: {
+                        application: ev.application || null,
+                        participants: ev.participants || null,
+                        description: ev.description || null,
+                    }
+                }));
+                calendar.createEvents(formatted);
+            });
+        }
+
+        // Load calendar
+        document.addEventListener("DOMContentLoaded", () => {
+            currentSchedule = null;
+
+            calendar = new tui.Calendar('#calendar', {
+                defaultView: 'month',
+                scheduleView: ['time'],
+                useCreationPopup: false,
+                useDetailPopup: false,
+                isReadOnly: false,
+                usageStatistics: false,
+                calendars: [
+                    {
+                        id: 'session',
+                        name: 'CAP Session',
+                        backgroundColor: '#f28e2b'
+                    },
+                    {
+                        id: 'general',
+                        name: 'General',
+                        backgroundColor: '#4e79a7'
+                    },
+                    {
+                        id: 'todo',
+                        name: 'Application To Do',
+                        backgroundColor: '#e15759'
+                    }
+                ],
+                selectable: true,
+                taskView: ['milestone']
+            });
+
+            // Register select event for creating new events
+            calendar.on('selectDateTime', ({ start, end, isAllDay, event }) => {
+                document.getElementById('addEventModalLabel').innerText = "Add New Event";
+                document.getElementById('event-submit-button').innerText = "Add Event";
+
+                // Format date and time
+                const startDateStr = new Date(start)?.toISOString().slice(0, 10);
+                const startTimeStr = new Date(start)?.toTimeString().slice(0, 5);
+                const endDateStr = new Date(end)?.toISOString().slice(0, 10);
+                const endTimeStr = new Date(end)?.toTimeString().slice(0, 5);
+
+                // Prefill form fields
+                document.getElementById('event-date').value = startDateStr;
+                document.getElementById('all-day-checkbox').checked = isAllDay;
+
+                if (!isAllDay) {
+                    document.getElementById('event-start-time').value = startTimeStr;
+                    document.getElementById('event-end').value = endDateStr;
+                    document.getElementById('event-end-time').value = endTimeStr;
+                }
+
+                const modal = new bootstrap.Modal(document.getElementById("addEventModal"));
+                modal.show();
+                calendar.clearGridSelections();
+            });
+
+            // Edit event already on the calendar
+            calendar.on('clickEvent', ({ event }) => {
+                const readOnly = event.isReadOnly;
+                
+                // For milestones only, which are set as read only but we want to open the modal still 
+                currentSchedule = readOnly ? null : event;
+                
+                document.getElementById('addEventModalLabel').innerText = "Edit Event";
+                document.getElementById('event-submit-button').innerText = "Edit Event";
+                document.getElementById('readonly-message').innerText = readOnly ? "Please edit details within the Applications tab" : '';
+
+                document.getElementById('event-category').value = event.calendarId;
+                document.getElementById('event-title').value = event.title;
+                document.getElementById('event-description').value = event.raw?.description || ''; // Custom events in raw
+                document.getElementById('all-day-checkbox').checked = event.isAllday;
+
+                const hasOtherParticipants = Array.isArray(event.raw?.participants) && event.raw.participants.length > 1;
+                document.getElementById('invite-checkbox').checked = hasOtherParticipants;
+                document.getElementById('participants-group').style.display = hasOtherParticipants ? "block" : "none";
+                
+                const ts = TomSelect?.instances?.['event-participants'];
+                if (ts) {
+                    ts.clear(true);
+                    if (hasOtherParticipants) {
+                        ts.setValue(event.raw.participants);
+                    }
+                    readOnly ? ts.disable() : ts.enable();
+                }
+
+                // Format date and time
+                const startDateStr = new Date(event.start)?.toISOString().slice(0, 10);
+                const startTimeStr = new Date(event.start)?.toTimeString().slice(0, 5);
+                const endDateStr = new Date(event.end)?.toISOString().slice(0, 10);
+                const endTimeStr = new Date(event.end)?.toTimeString().slice(0, 5);
+
+                // Prefill form fields
+                document.getElementById('event-date').value = startDateStr;
+
+                if (!event.isAllDay) {
+                    document.getElementById('event-start-time').value = startTimeStr;
+                    document.getElementById('event-end').value = endDateStr;
+                    document.getElementById('event-end-time').value = endTimeStr;
+                }
+
+                // Disable event submit button
+                const submitBtn = document.getElementById('event-submit-button');
+                submitBtn.classList.toggle('d-none', readOnly); // Hide if view only
+                submitBtn.textContent = readOnly ? '' : "Edit Event";
+
+                // Disable other inputs and selects
+                document
+                    .querySelectorAll('#add-event-form input, #add-event-form textarea, #add-event-form select')
+                    .forEach(el => el.disabled = readOnly);
+
+                // Don't show the all day fields unless the box is checked
+                setAllDayMode(event.isAllday);
+
+                const modal = new bootstrap.Modal(document.getElementById("addEventModal"));
+                modal.show();
+                calendar.clearGridSelections();
+
+            });
+
+            window.tuiCalendarInstance = calendar;
+            refreshCalendar(calendar);
+            calendar.render();
+            // Show current view's date on load
+            updateDateDisplay(calendar);
+        });
+
+        // Submitting form to add a new event
+        document.getElementById("add-event-form").addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            const category = document.getElementById("event-category").value;
+            const name = document.getElementById("event-title").value;
+            const description = document.getElementById("event-description").value;
+            const date = document.getElementById("event-date").value;
+            const time = document.getElementById("event-start-time").value;
+            const isAllDay = document.getElementById("all-day-checkbox").checked;
+            const endDate = document.getElementById("event-end").value;
+            const endTime = document.getElementById("event-end-time").value;
+            const inviteOthers = document.getElementById("invite-checkbox").checked;
+            const participantsSelect = document.getElementById("event-participants");
+
+            // If time provided, combine with date
+            const start = time ? ensureOffset(`${date}T${time}`) : ensureOffset(date);
+            const end = !isAllDay && endDate ? (endTime ? ensureOffset(`${endDate}T${endTime}`): ensureOffset(endDate)) : null;
+
+            const participants = inviteOthers && participantsSelect
+                ? Array.from(participantsSelect.selectedOptions).map(opt => parseInt(opt.value))
+                : [];
+            
+            const body = { 
+                name: name, 
+                start: start,
+                description: description,
+                end: end,
+                category: category,
+                isAllDay: isAllDay,
+                participants: participants,
+                raw : {
+                    participants: participants,
+                    description: description,
+                }
+            }
+
+            if (currentSchedule) {
+                fetch(`/calendar/api/events/${currentSchedule.id.split("-")[1]}/`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then((response) => {
+                    if (!response.ok) throw new Error("Failed to edit event");
+                    return response.json()
+                })
+                .then((savedEvent) => {
+                    currentSchedule = null;
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
+                    modal.hide();
+                    refreshCalendar(window.tuiCalendarInstance);
+                    calendar.clearGridSelections();
+                })
+            } else {
+                fetch("/calendar/api/events/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify(body)
+                })
+                .then((response) => {
+                    if (!response.ok) throw new Error("Failed to create event");
+                    return response.json();
+                })
+                .then((savedEvent) => {
+                    currentSchedule = null;
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addEventModal'));
+                    modal.hide();
+                    refreshCalendar(window.tuiCalendarInstance);
+                    calendar.clearGridSelections();
+                });
+            }
+        });
+
+        // Show relevant elements only if user selects checkbox
+        function setAllDayMode(isAllDay) {
+            const endGroup = document.getElementById("end-date-group");
+            endGroup.style.display = isAllDay ? "none" : "block";
+
+            const startTimeInput = document.getElementById('event-start-time');
+            const endInput = document.getElementById('event-end');
+            const endTimeInput = document.getElementById('event-end-time');
+
+            if (isAllDay) {
+                startTimeInput.value = '';
+                endInput.value = '';
+                endTimeInput.value = '';
+            }
+        }
+
+        document.getElementById("all-day-checkbox").addEventListener("change", (event) => {
+            setAllDayMode(event.target.checked);
+        });
+
+        document.getElementById("invite-checkbox").addEventListener("change", (event) => {
+            const participantsGroup = document.getElementById("participants-group");
+            participantsGroup.style.display = event.target.checked ? "block" : "none";
+        });
+
+        // Search for users to add as participants
+        new TomSelect("#event-participants", {
+            valueField: "id",
+            labelField: "full_name",
+            searchField: "full_name",
+            load: (query, callback) => {
+                if (!query.length) return callback();
+
+                fetch(`/users/api/search/?q=${encodeURIComponent(query)}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const users = data.map((user) => ({
+                            id: user.id,
+                            full_name: `${user.first_name} ${user.last_name}`,
+                        }));
+                        callback(users);
+                    })
+                    .catch(() => callback());
+            },
+            maxOptions: 10,
+            create: false
+        });
+
+        // Functionality for buttons that toggle across months / weeks, etc
+        function updateDateDisplay(calendar) {
+            const viewName = calendar.getViewName(); // "month", "week", or "day"
+            let dateText = "";
+
+            const formatter = new Intl.DateTimeFormat("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+            });
+
+            const formatter_month = new Intl.DateTimeFormat("en-US", {
+                month: "long",
+                year: "numeric",
+            });
+
+            if (viewName === "month") {
+                const current = calendar.getDate().toDate();
+                dateText = formatter_month.format(current);
+            } else {
+                const start = calendar.getDateRangeStart().toDate();
+                const end = calendar.getDateRangeEnd().toDate();
+                dateText = `${formatter.format(start)} - ${formatter.format(end)}`;
+            }
+
+            document.getElementById("calendar-date-display").textContent = dateText;
+        }
+
+        // Navigation buttons
+        document.getElementById("prevBtn").addEventListener("click", () => {
+            calendar.prev();
+            refreshCalendar(calendar);
+            updateDateDisplay(calendar);
+        });
+
+        document.getElementById("todayBtn").addEventListener("click", () => {
+            calendar.today();
+            refreshCalendar(calendar);
+            updateDateDisplay(calendar);
+        });
+
+        document.getElementById("nextBtn").addEventListener("click", () => {
+            calendar.next();
+            refreshCalendar(calendar);
+            updateDateDisplay(calendar);
+        });
+
+        // View toggle (month vs week vs day)
+        document.querySelectorAll("[data-view]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                // For all buttons, have to remove active
+                document.querySelectorAll("[data-view]").forEach((btn) => btn.classList.remove("active"));
+
+                // For current button, add back
+                btn.classList.add("active");
+
+                const view = btn.getAttribute("data-view");
+                calendar.changeView(view);
+                refreshCalendar(calendar);
+                updateDateDisplay(calendar);
+            });
+        });
+
+        // Reset modal on close
+        document.getElementById("addEventModal").addEventListener("hidden.bs.modal", () => {
+            document.getElementById('add-event-form').reset();
+            currentSchedule = null;
+            document.getElementById('addEventModalLabel').innerText = "Add New Event";
+            document.getElementById('event-submit-button').innerText = "Add Event";
+            document.getElementById('readonly-message').innerText = '';
+            document.getElementById('participants-group').style.display = "none";
+            document.getElementById('end-date-group').style.display = "block";
+
+            // Enable event submit button
+            const submitBtn = document.getElementById('event-submit-button');
+            submitBtn.textContent = '';
+
+            // Enable other inputs and selects
+            document
+                .querySelectorAll('#add-event-form input, #add-event-form textarea, #add-event-form select')
+                .forEach(el => el.disabled = false);
+            
+            TomSelect?.instances?.['event-participants']?.enable();
+
+            calendar.clearGridSelections();
+        });
+
+    </script>
+{% endblock %}
