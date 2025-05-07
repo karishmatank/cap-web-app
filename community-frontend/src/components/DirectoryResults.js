@@ -24,10 +24,7 @@ function DirectoryResults({ results, currentUser }) {
             const roomId = response.data.room_id;
 
             // Redirect to the chat room
-            window.location.href = `http://localhost:3000/chat/${roomId}/`;
-
-            // In production
-            // window.location.href = `/chat/${roomId}/`;
+            window.location.href = `/messages/${roomId}/`;
         })
         .catch((error) => {
             console.error("Error creating private chat", error);
