@@ -38,8 +38,8 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
     /* Open WebSocket connection */
     useEffect(() => {
         const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-        const backendHost = "localhost:8000";
-        const socket = new WebSocket(`${protocol}://${backendHost}/ws/chat/${roomId}/`);
+        const host = window.location.host;
+        const socket = new WebSocket(`${protocol}://${host}/ws/chat/${roomId}/`);
         socketRef.current = socket;
 
         socket.onopen = () => {

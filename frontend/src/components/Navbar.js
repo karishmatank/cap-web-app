@@ -31,7 +31,7 @@ function Navbar () {
     const handleLogout = () => {
         axios.post("/users/logout/")
         .then(() => {
-            window.location.href = 'http://localhost:8000/users/login/'
+            window.location.href = '/users/login/'
         })
         .catch((error) => {
             console.log("Error logging out", error);

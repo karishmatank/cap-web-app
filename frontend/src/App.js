@@ -105,8 +105,8 @@ function Layout() {
   }
 
   if (!currentUser) {
-    // Redirect user to login. Using localhost:8000 for now
-    window.location.href = 'http://localhost:8000/users/login/?next=' + window.location.pathname;
+    // Redirect user to login.
+    window.location.href = '/users/login/?next=' + window.location.pathname;
     return null;
   }
 
