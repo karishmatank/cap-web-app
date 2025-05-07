@@ -412,13 +412,26 @@ function updateDateDisplay(calendar) {
         year: "numeric",
     });
 
+    const formatter_week_mobile = new Intl.DateTimeFormat("en-US", {
+        month: "numeric",
+        day: "numeric",
+        year: "2-digit",
+    });
+
     if (viewName === "month") {
         const current = calendar.getDate().toDate();
         dateText = formatter_month.format(current);
+    } else if (viewName === "day") {
+        dateText = formatter.format(calendar.getDate().toDate());
     } else {
         const start = calendar.getDateRangeStart().toDate();
         const end = calendar.getDateRangeEnd().toDate();
-        dateText = `${formatter.format(start)} - ${formatter.format(end)}`;
+        if (window.innerWidth < 600) {
+            dateText = `W/E ${formatter_week_mobile.format(end)}`;
+        } else {
+            dateText = `${formatter.format(start)} - ${formatter.format(end)}`;
+        }
+        
     }
 
     document.getElementById("calendar-date-display").textContent = dateText;
