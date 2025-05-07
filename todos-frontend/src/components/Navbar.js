@@ -85,7 +85,8 @@ function Navbar () {
                                         {link.children.map((child) => 
                                             <li key={child.path}>
                                                 {child.isReact ? (
-                                                    <Link className="dropdown-item" to={child.path}>{child.name}</Link>
+                                                    // <Link className="dropdown-item" to={child.path}>{child.name}</Link>
+                                                    <a className="dropdown-item" href={child.path}>{child.name}</a>
                                                 ) : (
                                                     <a className="dropdown-item" href={child.path}>{child.name}</a>
                                                 )}
@@ -96,7 +97,8 @@ function Navbar () {
                             ) : (
                                 <li className="nav-item" key={link.path}>
                                     {link.isReact ? (
-                                        <Link className="nav-link" to={link.path}>{link.name}</Link>
+                                        // <Link className="nav-link" to={link.path}>{link.name}</Link>
+                                        <a className="nav-link" href={link.path}>{link.name}</a>
                                     ) : link.method === 'get' ? (
                                         <a className="nav-link" href={link.path}>{link.name}</a>
                                     ) : (
