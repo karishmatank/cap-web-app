@@ -1,14 +1,14 @@
 [
-    { "name": "Home", "path": "http://localhost:8000/users/", "isReact": false, "method": "get" },
-    { "name": "Chat", "path": "http://localhost:3000/", "isReact": true, "method": "get" },
+    { "name": "Home", "path": "/users/", "isReact": false, "method": "get" },
+    { "name": "Chat", "path": "/messages/", "isReact": true, "method": "get" },
     { "name": "CAP", "children": [
-        { "name": "Directory", "path": "http://localhost:3001/", "isReact": true, "method": "get" },
-        { "name": "Workshop Materials", "path": "http://localhost:8000/workshops/", "isReact": false, "method": "get"}
+        { "name": "Directory", "path": "/directory/", "isReact": true, "method": "get" },
+        { "name": "Workshop Materials", "path": "/workshops/", "isReact": false, "method": "get"}
     ]},
-    { "name": "Applications", "path": "http://localhost:3002/", "isReact": true, "method": "get"},
+    { "name": "Applications", "path": "/applications/", "isReact": true, "method": "get"},
     { "name": "Settings", "children": [
-        { "name": "Change Password", "path": "http://localhost:8000/users/change-password/", "isReact": false, "method": "get" },
-        { "name": "Edit Profile", "path": "http://localhost:8000/users/edit-profile/", "isReact": false, "method": "get"}
+        { "name": "Change Password", "path": "/users/change-password/", "isReact": false, "method": "get" },
+        { "name": "Edit Profile", "path": "/users/edit-profile/", "isReact": false, "method": "get"}
     ]},
-    { "name": "Logout", "path": "http://localhost:8000/users/logout/", "isReact": false, "method": "post" }
+    { "name": "Logout", "path": "/users/logout/", "isReact": false, "method": "post" }
 ]

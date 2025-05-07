@@ -51,7 +51,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',  # Enables basic HTTP headers first
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # static-file handling after
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,7 +66,11 @@ ROOT_URLCONF = 'cap_portal.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR.parent / "frontend" / "build",
+            BASE_DIR.parent / "community-frontend" / "build",
+            BASE_DIR.parent / "todos-frontend" / "build",
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -128,6 +133,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR.parent / "frontend" / "build" / "static",
+    BASE_DIR.parent / "community-frontend" / "build" / "static",
+    BASE_DIR.parent / "todos-frontend" / "build" / "static",
+]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+# Serve compressed, cache-busted static files (WhiteNoise)
+STATICFILES_STORAGE = (
+    'whitenoise.storage.CompressedManifestStaticFilesStorage'
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

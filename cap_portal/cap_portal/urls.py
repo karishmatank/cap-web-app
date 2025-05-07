@@ -16,14 +16,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from .spa_views import ChatSPAView, DirectorySPAView, ApplicationsSPAView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('hello/', include("hello.urls")),
+    path('', include("hello.urls")),
     path('tasks/', include("tasks.urls")),
     path('users/', include("users.urls", namespace='users')),
     path('chat/', include("chat.urls")),
     path('core/', include("core.urls")),
     path('workshops/', include("workshops.urls")),
-    path('calendar/', include("calendar_app.urls"))
+    path('calendar/', include("calendar_app.urls")),
+
+    # Browser-facing React SPAs. In order of list in settings.py TEMPLATES[0].DIRS
+    path('messages/', ChatSPAView.as_view(), name="messages"),
+    path('directory/', DirectorySPAView.as_view(), name="directory"),
+    path('applications/', ApplicationsSPAView.as_view(), name="applications")
 ]
