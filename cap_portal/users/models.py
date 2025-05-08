@@ -24,3 +24,10 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name} ({self.role})"
+
+class AllowedEmail(models.Model):
+    email = models.EmailField(unique=True)
+    role = models.CharField(choices=ROLE_CHOICES, max_length=255)
+
+    def __str__(self):
+        return f"{self.email} ({self.role})"

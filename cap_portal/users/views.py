@@ -9,7 +9,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 
-from .models import UserProfile, ROLE_CHOICES
+from .models import UserProfile, ROLE_CHOICES, AllowedEmail
 from .serializers import UserProfileSerializer
 
 from rest_framework import generics
@@ -65,12 +65,22 @@ def create_user_get_role(request):
 
 def create_user(request, role):
     if request.method == 'POST':
+        # Check if the user email is valid for the role they supplied
+        try:
+            allowed = AllowedEmail.objects.get(email__iexact=request.POST["email"])
+        except AllowedEmail.DoesNotExist:
+            messages.error(request, f"The email address {request.POST["email"]} is not eligible to sign up for an account.")
+            return HttpResponseRedirect(reverse("users:login"))
+        
+        if allowed.role != role:
+            messages.error(request, f"The email address {request.POST["email"]} is not eligible for role {role}.")
+            return HttpResponseRedirect(reverse("users:login"))
+            
         # Check if there is already a user associated with the email
         user_exists = User.objects.filter(email=request.POST["email"]).exists()
         if user_exists:
-            return render(request, "users/create_user.html", {
-                "message": f"Account already exists for email address {request.POST["email"]}."
-            })
+            messages.error(request, f"Account already exists for email address {request.POST["email"]}. Please sign in.")
+            return HttpResponseRedirect(reverse("users:login"))
         
         # Check if both password entries match
         if request.POST["password"] != request.POST["password_reentry"]:

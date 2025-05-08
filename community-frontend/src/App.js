@@ -23,7 +23,7 @@ function Layout() {
     }
 
     const delay = setTimeout(() => {
-      axios.get(`users/api/community-search/?q=${query}&role=${role}`)
+      axios.get(`/users/api/community-search/?q=${query}&role=${role}`)
       .then((response) => {
         setSearchResults(response.data);
       })

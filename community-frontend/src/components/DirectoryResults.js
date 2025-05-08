@@ -16,7 +16,7 @@ function DirectoryResults({ results, currentUser }) {
     }
 
     const handlePrivateChat = () => {
-        axios.post('chat/api/chats/start_private_chat/', {
+        axios.post('/chat/api/chats/start_private_chat/', {
             'target_user_id': targetUser.id,
         })
         .then((response) => {
