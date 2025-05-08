@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'core',
     'workshops',
     'calendar_app',
+    'anymail',
     'rest_framework',
     'widget_tweaks',
     'django.contrib.admin',
@@ -166,8 +167,18 @@ LOGIN_REDIRECT_URL = 'users:index'
 
 # Email backend for sending password reset emails
 
-EMAIL_BACKEND = env("EMAIL_BACKEND", default='django.core.mail.backends.console.EmailBackend')
-DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+# EMAIL_BACKEND = env("EMAIL_BACKEND", default='django.core.mail.backends.console.EmailBackend')
+# DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+
+ANYMAIL = {
+    "MAILJET_API_KEY": env("MAILJET_API_KEY"),
+    "MAILJET_SECRET_KEY": env("MAILJET_SECRET_KEY"),
+    "MAILJET_DEFAULT_FROM_EMAIL": env("MAILJET_DEFAULT_FROM_EMAIL"),
+}
+
+EMAIL_BACKEND = 'anymail.backends.mailjet.EmailBackend'
+DEFAULT_FROM_EMAIL = env("MAILJET_DEFAULT_FROM_EMAIL")
+
 
 # Daphne for chat functionality
 ASGI_APPLICATION = 'cap_portal.asgi.application'
