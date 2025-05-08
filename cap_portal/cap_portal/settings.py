@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3u%h%mol=5)ma)%lj)*y(os7y4m(#r6#3@flviqkgx)tt1o-9@'
+SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -92,8 +93,12 @@ WSGI_APPLICATION = 'cap_portal.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.environ.get("DB_ENGINE", 'django.db.backends.sqlite3'),
+        'NAME': os.environ.get("DB_NAME", str(BASE_DIR / 'db.sqlite3')),
+        'USER': os.environ.get("DB_USER", ""),
+        'PASSWORD': os.environ.get("DB_PASS", ""),
+        'HOST': os.environ.get("DB_HOST", ""),
+        'PORT': os.environ.get("DB_PORT", ""),
     }
 }
 
@@ -158,16 +163,8 @@ LOGIN_REDIRECT_URL = 'users:index'
 
 # Email backend for sending password reset emails
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", 'django.core.mail.backends.console.EmailBackend')
 DEFAULT_FROM_EMAIL = 'webmaster@localhost'
-
-# For production, configure SMTP:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.yourprovider.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@example.com'
-# EMAIL_HOST_PASSWORD = 'your-email-password'
 
 # Daphne for chat functionality
 ASGI_APPLICATION = 'cap_portal.asgi.application'
@@ -175,16 +172,10 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [os.environ["REDIS_URL"]],
         },
     },
 }
 
 # Trusted origins
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'https://my-future-production-domain.com' # TODO: Fix this once in production
-]
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
