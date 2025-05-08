@@ -1,0 +1,13 @@
+# Ignore Python virtual environments
+.venv/
+
+# Ignore environemnt variable files
+.env
+
+# Node modules
+**/node_modules/
+
+# Logs, OS files, editor files, etc
+*.log
+.DS_Store
+.vscode/
