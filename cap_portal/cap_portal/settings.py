@@ -10,23 +10,26 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import environ
 import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+env = environ.Env(DEBUG=(bool, False))
+environ.Env.read_env(env_file=BASE_DIR.parent / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ["SECRET_KEY"]
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "") == "True"
+DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
 
 # Application definition
@@ -93,12 +96,12 @@ WSGI_APPLICATION = 'cap_portal.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get("DB_ENGINE", 'django.db.backends.sqlite3'),
-        'NAME': os.environ.get("DB_NAME", str(BASE_DIR / 'db.sqlite3')),
-        'USER': os.environ.get("DB_USER", ""),
-        'PASSWORD': os.environ.get("DB_PASS", ""),
-        'HOST': os.environ.get("DB_HOST", ""),
-        'PORT': os.environ.get("DB_PORT", ""),
+        'ENGINE': env("DB_ENGINE", default='django.db.backends.sqlite3'),
+        'NAME': env("DB_NAME", default=str(BASE_DIR / 'db.sqlite3')),
+        'USER': env("DB_USER", default=""),
+        'PASSWORD': env("DB_PASS", default=""),
+        'HOST': env("DB_HOST", default=""),
+        'PORT': env("DB_PORT", default=""),
     }
 }
 
@@ -163,7 +166,7 @@ LOGIN_REDIRECT_URL = 'users:index'
 
 # Email backend for sending password reset emails
 
-EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", 'django.core.mail.backends.console.EmailBackend')
+EMAIL_BACKEND = env("EMAIL_BACKEND", default='django.core.mail.backends.console.EmailBackend')
 DEFAULT_FROM_EMAIL = 'webmaster@localhost'
 
 # Daphne for chat functionality
@@ -172,10 +175,10 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.environ["REDIS_URL"]],
+            "hosts": [env("REDIS_URL")],
         },
     },
 }
 
 # Trusted origins
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
