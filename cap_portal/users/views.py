@@ -69,17 +69,17 @@ def create_user(request, role):
         try:
             allowed = AllowedEmail.objects.get(email__iexact=request.POST["email"])
         except AllowedEmail.DoesNotExist:
-            messages.error(request, f"The email address {request.POST["email"]} is not eligible to sign up for an account.")
+            messages.error(request, f"The email address {request.POST['email']} is not eligible to sign up for an account.")
             return HttpResponseRedirect(reverse("users:login"))
         
         if allowed.role != role:
-            messages.error(request, f"The email address {request.POST["email"]} is not eligible for role {role}.")
+            messages.error(request, f"The email address {request.POST['email']} is not eligible for role {role}.")
             return HttpResponseRedirect(reverse("users:login"))
             
         # Check if there is already a user associated with the email
         user_exists = User.objects.filter(email=request.POST["email"]).exists()
         if user_exists:
-            messages.error(request, f"Account already exists for email address {request.POST["email"]}. Please sign in.")
+            messages.error(request, f"Account already exists for email address {request.POST['email']}. Please sign in.")
             return HttpResponseRedirect(reverse("users:login"))
         
         # Check if both password entries match
