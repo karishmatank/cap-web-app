@@ -18,7 +18,6 @@ function ToDoFullList({ currentUser }) {
         {'field_name': 'description', 'type': 'textarea', 'width': '30%'}
     ];
     const [applicationOptions, setApplicationOptions] = useState([]);
-    const [completedOptions, setCompletedOptions] = useState([{ value: true, label: "Completed" }, { value: false, label: "Outstanding" }]);
     const [tagOptions, setTagOptions] = useState([]);
     const datePickerRef = useRef(null);
     const [menteeOptions, setMenteeOptions] = useState([]);
@@ -27,6 +26,8 @@ function ToDoFullList({ currentUser }) {
     const [filteredToDos, setFilteredToDos] = useState([]);
     const [selectedApplications, setSelectedApplications] = useState([]);
     const [selectedCompleted, setSelectedCompleted] = useState([false]);
+
+    const completedOptions = [{ value: true, label: "Completed" }, { value: false, label: "Outstanding" }];
 
     // Get application options specific to the user
     useEffect(() => {
@@ -291,11 +292,11 @@ function ToDoFullList({ currentUser }) {
         }));
     };
 
-    const handleFocus = () => {
-        if (datePickerRef.current) {
-            datePickerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-    };
+    // const handleFocus = () => {
+    //     if (datePickerRef.current) {
+    //         datePickerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    //     }
+    // };
 
     const parseDateFromString = (dateString) => {
         if (!dateString) return undefined;

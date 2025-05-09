@@ -227,11 +227,11 @@ export function EditableDate({ value, onSave }) {
     const calendarRef = useRef(null);
     const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0 });
 
-    const handleFocus = () => {
-        if (datePickerRef.current) {
-            datePickerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-    };
+    // const handleFocus = () => {
+    //     if (datePickerRef.current) {
+    //         datePickerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    //     }
+    // };
 
     const saveChanges = (date) => {
         // react-datepicker itself calls this function and directly passes in the new Date object
