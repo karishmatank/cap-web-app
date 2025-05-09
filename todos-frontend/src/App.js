@@ -1,9 +1,7 @@
-import axios from 'axios';
 import './App.css';
 import { BrowserRouter as Router } from 'react-router-dom';
 import Navbar from './components/Navbar'; 
 import useCurrentUser from './hooks/useCurrentUser';
-import { useState, useEffect } from "react";
 import ApplicationList from './components/ApplicationList';
 import ApplicationPlatformSurvey from './components/ApplicationPlatformSurvey';
 import ToDoFullList from './components/ToDoFullList';
