@@ -20,9 +20,8 @@ from .spa_views import ChatSPAView, DirectorySPAView, ApplicationsSPAView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include("hello.urls")),
+    path('', include("users.urls", namespace='users')),
     path('tasks/', include("tasks.urls")),
-    path('users/', include("users.urls", namespace='users')),
     path('chat/', include("chat.urls")),
     path('core/', include("core.urls")),
     path('workshops/', include("workshops.urls")),

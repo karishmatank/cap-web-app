@@ -51,7 +51,7 @@ urlpatterns = [
     path('edit-profile/', views.edit_profile, name='edit_profile'),
 
     # API views
-    path("api/me/", views.get_current_user),
-    path("api/search/", views.search_users_by_name),
-    path("api/community-search/", views.CommunityDirectoryListView.as_view())
+    path("users/api/me/", views.get_current_user),
+    path("users/api/search/", views.search_users_by_name),
+    path("users/api/community-search/", views.CommunityDirectoryListView.as_view())
 ]

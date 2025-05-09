@@ -28,9 +28,9 @@ function Navbar () {
 
     // Handle post request for logout
     const handleLogout = () => {
-        axios.post("/users/logout/")
+        axios.post("/logout/")
         .then(() => {
-            window.location.href = '/users/login/'
+            window.location.href = '/login/'
         })
         .catch((error) => {
             console.log("Error logging out", error);

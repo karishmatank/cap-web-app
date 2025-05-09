@@ -1,5 +1,5 @@
 [
-    { "name": "Home", "path": "/users/", "isReact": false, "method": "get" },
+    { "name": "Home", "path": "/", "isReact": false, "method": "get" },
     { "name": "Chat", "path": "/messages/", "isReact": true, "method": "get" },
     { "name": "CAP", "children": [
         { "name": "Directory", "path": "/directory/", "isReact": true, "method": "get" },
@@ -7,8 +7,8 @@
     ]},
     { "name": "Applications", "path": "/applications/", "isReact": true, "method": "get"},
     { "name": "Settings", "children": [
-        { "name": "Change Password", "path": "/users/change-password/", "isReact": false, "method": "get" },
-        { "name": "Edit Profile", "path": "/users/edit-profile/", "isReact": false, "method": "get"}
+        { "name": "Change Password", "path": "/change-password/", "isReact": false, "method": "get" },
+        { "name": "Edit Profile", "path": "/edit-profile/", "isReact": false, "method": "get"}
     ]},
-    { "name": "Logout", "path": "/users/logout/", "isReact": false, "method": "post" }
+    { "name": "Logout", "path": "/logout/", "isReact": false, "method": "post" }
 ]

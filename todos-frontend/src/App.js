@@ -19,7 +19,7 @@ function Layout() {
 
   if (!currentUser) {
     // Redirect user to login.
-    window.location.href = '/users/login/?next=' + window.location.pathname;
+    window.location.href = '/login/?next=' + window.location.pathname;
     return null;
   }
 
