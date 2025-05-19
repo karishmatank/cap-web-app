@@ -16,8 +16,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "craco start",
+    "build": "craco build && cp build/sw-*.js build/workbox-*.js ../cap_portal/root_static/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -39,5 +39,9 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:8000"
+  "proxy": "http://localhost:8000",
+  "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "workbox-webpack-plugin": "^7.3.0"
+  }
 }

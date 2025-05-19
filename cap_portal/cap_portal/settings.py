@@ -153,6 +153,9 @@ STATICFILES_STORAGE = (
     'whitenoise.storage.CompressedManifestStaticFilesStorage'
 )
 
+# Tell WhiteNoise about the files that belong at the site root
+WHITENOISE_ROOT = BASE_DIR / "root_static"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
