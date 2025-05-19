@@ -21,3 +21,7 @@ registerRoute(
 );
 
 // To add offline page
+
+// Immediate update lines
+self.skipWaiting();
+self.clients.claim();

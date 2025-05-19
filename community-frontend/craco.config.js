@@ -6,14 +6,10 @@ module.exports = {
             config.plugins.push(
                 new GenerateSW({
                     swDest: 'sw-community.js',  // emits to build/sw-community.js
+                    exclude: [/index\.html$/],
                     cleanupOutdatedCaches: true,
                     clientsClaim: false,  
                     skipWaiting: false,
-                    navigateFallback: '/directory/index.html',  // serve index.html for SPA routes if it can't find URL in cache or network
-                    navigateFallbackDenylist: [
-                        new RegExp('^/api/'),
-                        new RegExp('\\.(?:png|jpe?g|svg|ico|css|js)$')
-                    ],
                     runtimeCaching: [
                         {
                             // Images: cache-first

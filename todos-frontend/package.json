@@ -22,7 +22,7 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build && cp build/sw-*.js build/workbox-*.js ../cap_portal/root_static/",
+    "build": "craco build && rm -f ../cap_portal/root_static/workbox-*.js && cp build/sw-*.js build/workbox-*.js ../cap_portal/root_static/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
