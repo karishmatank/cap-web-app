@@ -6,6 +6,7 @@ module.exports = {
             config.plugins.push(
                 new GenerateSW({
                     swDest: 'sw-applications.js',  // emits to build/sw-applications.js
+                    maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,  // 3 MB
                     exclude: [/index\.html$/],
                     cleanupOutdatedCaches: true,
                     clientsClaim: false,  

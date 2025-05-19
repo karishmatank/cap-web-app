@@ -6,6 +6,7 @@ module.exports = {
             config.plugins.push(
                 new GenerateSW({
                     swDest: 'sw-chat.js',  // emits to build/sw-chat.js
+                    maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,  // 3 MB
                     exclude: [/index\.html$/],
                     cleanupOutdatedCaches: true,
                     clientsClaim: false,  

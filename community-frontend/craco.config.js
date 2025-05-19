@@ -6,6 +6,7 @@ module.exports = {
             config.plugins.push(
                 new GenerateSW({
                     swDest: 'sw-community.js',  // emits to build/sw-community.js
+                    maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,  // 3 MB
                     exclude: [/index\.html$/],
                     cleanupOutdatedCaches: true,
                     clientsClaim: false,  
