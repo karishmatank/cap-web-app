@@ -2,9 +2,11 @@ from .models import WorkshopMaterial
 from datetime import datetime, date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from users.decorators import admin_only
+import json
 
 # Create your views here.
 
@@ -121,3 +123,19 @@ def delete_workshop(request, id):
 
     messages.success(request, "Workshop deleted.")
     return redirect("workshops:index")
+
+@login_required
+@admin_only
+def edit_visibility(request, id):
+    if request.method == 'POST':
+        workshop = WorkshopMaterial.objects.get(id=id)
+        try:
+            data = json.loads(request.body)
+
+            workshop.visible = data.get('checked')
+            workshop.save()
+
+            return JsonResponse({'status': 'success', 'message': 'Workshop visibility status changed'})
+        except json.JSONDecodeError:
+            return JsonResponse({"status": 'error', 'message': 'Invalid JSON'}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

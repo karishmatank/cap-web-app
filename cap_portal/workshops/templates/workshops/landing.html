@@ -38,15 +38,34 @@
                                 </h5>
                                 <p class="card-text">{{ workshop.description }}</p>
                                 {% if request.user.userprofile.role == 'admin' %}
-                                    <a href="{% url 'workshops:edit_workshop' workshop.id %}" class="btn btn-sm btn-warning">Edit</a>
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-sm btn-danger" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#deleteWorkshop{{ workshop.id }}"
-                                    >
-                                        Delete
-                                    </button>
+                                    <div class="d-inline-flex align-items-center gap-2">
+                                        <a 
+                                            href="{% url 'workshops:edit_workshop' workshop.id %}" 
+                                            class="btn btn-sm btn-warning"
+                                        >
+                                            Edit
+                                        </a>
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-sm btn-danger" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteWorkshop{{ workshop.id }}"
+                                        >
+                                            Delete
+                                        </button>
+                                        <div class="form-check form-switch">
+                                            <input 
+                                                class="form-check-input" 
+                                                type="checkbox" 
+                                                id="workshop-visible-{{ workshop.id }}" 
+                                                {% if workshop.visible %}checked{% endif %}
+                                            >
+                                            <label style="font-size: 0.875rem;">
+                                                Visible to {{ group.grouper }}th Grade Cohort
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
                                 {% endif %}
                             </div>
                         </div>
@@ -89,5 +108,33 @@
             {% endfor %}
         </div>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const visibleCheckboxes = document.querySelectorAll('[id^="workshop-visible"]');
 
+            visibleCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener("change", (event) => {
+                    const workshopId = checkbox.id.split("-")[2];
+                    fetch('/workshops/admin/edit-visibility/' + workshopId + "/", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ checked: event.target.checked })
+                    })
+                    .then((response) => {
+                        response.json();
+                    })
+                    .then((data) => {
+                        console.log('Visibility changed', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error changing visibilty', error);
+                    });
+                });
+            });
+
+        });
+    </script>
 {% endblock %}

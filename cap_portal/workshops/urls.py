@@ -11,5 +11,6 @@ urlpatterns = [
     # Admin views to create new workshops or edit existing ones
     path("admin/new/", views.create_workshop, name="create_workshop"),
     path("admin/edit/<int:id>/", views.edit_workshop, name="edit_workshop"),
-    path("admin/delete/<int:id>/", views.delete_workshop, name="delete_workshop")
+    path("admin/delete/<int:id>/", views.delete_workshop, name="delete_workshop"),
+    path("admin/edit-visibility/<int:id>/", views.edit_visibility, name="edit_visibility")
 ]
