@@ -22,6 +22,12 @@
             </div>
         {% endif %}
 
+        {% if workshops.count == 0 %}
+            <div>
+                No workshops materials available, please check back later!
+            </div>
+        {% endif %}
+
         <div class="row">
             {% regroup workshops by grade as grade_groups %}
 

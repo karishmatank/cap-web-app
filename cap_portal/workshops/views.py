@@ -6,15 +6,34 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from users.decorators import admin_only
+from users.models import UserProfile
 import json
+import datetime
 
 # Create your views here.
 
 # See all workshops
 @login_required
 def index(request):
-    # Everyone will be able to see all workshops, not going to do the filtering thing for now
-    workshops = WorkshopMaterial.objects.all()
+    # Admins will be able to see all workshops
+    current_userprofile = request.user.userprofile
+
+    if current_userprofile.role == 'admin':
+        workshops = WorkshopMaterial.objects.all()
+    else:
+        if current_userprofile.role == 'mentee':
+            grad_year = current_userprofile.graduation_year
+        else:
+            mentees = UserProfile.objects.filter(mentors=request.user)
+            grad_year = max([i.graduation_year for i in mentees])
+        grade_cutoff_date = datetime.date(year=grad_year, month=8, day=1)
+        grade_level = 11 if (grade_cutoff_date - datetime.datetime.today().date()).days > 365 else 12
+        if grade_level == 11:
+            workshops = WorkshopMaterial.objects.filter(grade=11, visible=True)
+        else:
+            workshops_11 = WorkshopMaterial.objects.filter(grade=11)
+            workshops_12 = WorkshopMaterial.objects.filter(grade=12, visible=True)
+            workshops = workshops_11 | workshops_12
     
     # Order by grade first (11 vs 12), then workshop number
     workshops_ordered = workshops.order_by("grade", "number")
