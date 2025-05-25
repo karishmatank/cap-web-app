@@ -55,8 +55,9 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
                         {'id': u.id, 'full_name': f'{u.first_name} {u.last_name}'}
                         for u in e.participants.all()
                     ],
+                    "creator": f'{e.creator.first_name} {e.creator.last_name}',
                     "isAllday": e.isAllDay,
-                    "isReadOnly": False,
+                    "isReadOnly": True if e.creator.id != user.id else False,
                     "description": e.description
                 }
                 for e in events

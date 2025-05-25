@@ -52,6 +52,7 @@ function refreshCalendar(calendar) {
                     application: ev.application || null,
                     participants: ev.participants?.map(u => u.id) || null,
                     description: ev.description || null,
+                    creator: ev.creator || null,
                 }
             };
         });
@@ -160,7 +161,13 @@ document.addEventListener("DOMContentLoaded", () => {
         
         document.getElementById('addEventModalLabel').innerText = "Edit Event";
         document.getElementById('event-submit-button').innerText = "Edit Event";
-        document.getElementById('readonly-message').innerText = readOnly ? "Please edit details within the Applications tab" : '';
+        if (readOnly & event.calendarId != 'todo') {
+            document.getElementById('readonly-message').innerText = `Only ${event.raw.creator} has edit permission for this event.`;
+        } else if (readOnly & event.calendarId == 'todo') {
+            document.getElementById('readonly-message').innerText = "Please edit to-do details within the Applications tab.";
+        } else {
+            document.getElementById('readonly-message').innerText = '';
+        }
 
         document.getElementById('event-category').value = event.calendarId;
         document.getElementById('event-title').value = event.title;
