@@ -201,7 +201,10 @@ def get_current_user(request):
 @permission_classes([IsAuthenticated])
 def search_users_by_name(request):
     query = request.GET.get("q", "")
-    users = User.objects.filter(first_name__icontains=query)[:10]
+    users = User.objects.filter(
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query)
+    )[:10]
 
     data = [
         {
@@ -209,7 +212,16 @@ def search_users_by_name(request):
             'first_name': user.first_name,
             'last_name': user.last_name
         }
-        for user in users
+        for user in users if user.id != request.user.id
+    ]
+
+    # Add in custom group options
+    data += [
+        {'id': -1, 'first_name': "All CAP", 'last_name': ""},
+        {'id': -2, 'first_name': "All 11th Grade CAP Mentees", 'last_name': ""},
+        {'id': -3, 'first_name': "All 11th Grade CAP Mentors", 'last_name': ""},
+        {'id': -4, 'first_name': "All 12th Grade CAP Mentees", 'last_name': ""},
+        {'id': -5, 'first_name': "All 12th Grade CAP Mentors", 'last_name': ""}
     ]
 
     return Response(data)

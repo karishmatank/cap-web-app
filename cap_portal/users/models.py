@@ -12,7 +12,7 @@ ROLE_CHOICES = (
 )
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(choices=ROLE_CHOICES, max_length=255)
     mentors = models.ManyToManyField(User, related_name='mentees', blank=True)
     graduation_year = models.IntegerField(null=True, blank=True)  # We'll keep this to mentees for now for filtering session details

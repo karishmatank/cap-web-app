@@ -1,14 +1,48 @@
 from .models import CalendarEvent, CATEGORY_CHOICES
 from .serializers import CalendarEventReadSerializer, CalendarEventWriteSerializer
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import render
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from tasks.models import ToDo, Application
+from users.models import UserProfile
+from datetime import datetime
+
 
 # Create your views here.
+def unpack_participants(submitted_participants):
+    unpacked_participants = set()
+
+    grad_year_11 = int(datetime.now().year) + 2 if datetime.now().month >= 8 else int(datetime.now().year) + 1
+    mentees_11 = User.objects.filter(profile__role='mentee', profile__graduation_year=grad_year_11)
+    mentors_11 = User.objects.filter(mentees__user__in=mentees_11)
+    grad_year_12 = int(datetime.now().year) + 1 if datetime.now().month >= 8 else int(datetime.now().year)
+    mentees_12 = User.objects.filter(profile__role='mentee', profile__graduation_year=grad_year_12)
+    mentors_12 = User.objects.filter(mentees__user__in=mentees_12)
+
+    for participant in submitted_participants:
+        if participant == -1:
+            unpacked_participants.update(User.objects.all())
+        elif participant == -2:
+            unpacked_participants.update(mentees_11)
+        elif participant == -4:
+            unpacked_participants.update(mentees_12)
+        elif participant == -3:
+            unpacked_participants.update(mentors_11)
+        elif participant == -5:
+            unpacked_participants.update(mentors_12)
+        else:
+            try:
+                unpacked_participants.add(User.objects.get(pk=int(participant)))
+            except (ValueError, User.DoesNotExist):
+                continue
+    
+    return unpacked_participants
+
+
 class CalendarEventViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -65,30 +99,74 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
         ]
 
         return Response(calendar_items)
-    
-    def perform_create(self, serializer):
-        # Other fields get saved, but it won't save the user as that won't be specified in a form
-        user = self.request.user
 
-        # Save the event with the creator field set
-        event = serializer.save(creator=user)
+    def create(self, request, *args, **kwargs):
+        # Intercept the create functionality as we added some custom lists that we need to expand into participants
 
+        # Get the participants list submitted
+        submitted_participants = request.data.get('participants', [])
+        data = request.data.copy()
+        data.pop('participants', None)
+
+        # Validate and save the other fields
+        serializer = self.get_serializer(data=data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError:
+            print(serializer.errors)
+            raise
+
+        # Save the event for all fields except participants
+        event = serializer.save(creator=request.user)
+
+        # Parse through participants
+        unpacked_participants = unpack_participants(submitted_participants=submitted_participants)
+        
         # Add the creator to the participants if not already there
-        submitted_participants = serializer.validated_data.get('participants', [])
-        final_participants = set(submitted_participants)
+        final_participants = set(unpacked_participants)
         final_participants.add(self.request.user)
-        
+
         event.participants.set(final_participants)
 
-    def perform_update(self, serializer):
-        event = serializer.save()
+        # Return the newly created event
+        output_serializer = self.get_serializer(event)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+    
 
-        # Make sure the creator remains in participants
-        submitted_participants = serializer.validated_data.get('participants', [])
-        final_participants = set(submitted_participants)
-        final_participants.add(self.request.user)
+    def update(self, request, *args, **kwargs):
+        # Boolean flag that tells DRF whether to require every field or not (True = PATCH, False = PUT)
+        partial = kwargs.pop('partial', False)
+
+        # Tell the serializer which model entry we're updating
+        instance = self.get_object()
+
+        # Get the participants list submitted
+        submitted_participants = request.data.get('participants', [])
+        data = request.data.copy()
+        data.pop('participants', None)
+
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError:
+            print(serializer.errors)
+            raise
         
+        # Save the event for all fields except participants
+        event = serializer.save(creator=request.user)
+
+        # Parse through participants
+        unpacked_participants = unpack_participants(submitted_participants=submitted_participants)
+        
+        # Add the creator to the participants if not already there
+        final_participants = set(unpacked_participants)
+        final_participants.add(self.request.user)
+
         event.participants.set(final_participants)
+
+        # Return the newly created event
+        output_serializer = self.get_serializer(event)
+        return Response(output_serializer.data, status=status.HTTP_200_OK)
 
 
 @login_required
