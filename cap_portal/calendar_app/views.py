@@ -141,7 +141,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
 
         # Get the participants list submitted
-        submitted_participants = request.data.get('participants', [])
+        submitted_participants = request.data.get('participants', None)
         data = request.data.copy()
         data.pop('participants', None)
 
@@ -156,13 +156,16 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
         event = serializer.save(creator=request.user)
 
         # Parse through participants
-        unpacked_participants = unpack_participants(submitted_participants=submitted_participants)
-        
-        # Add the creator to the participants if not already there
-        final_participants = set(unpacked_participants)
-        final_participants.add(self.request.user)
+        # I set submitted_participants to None above because I didn't want to overwrite my participants list
+        # if I ended up sending PATCH requests for updating non-participant fields
+        if submitted_participants is not None:
+            unpacked_participants = unpack_participants(submitted_participants=submitted_participants)
+            
+            # Add the creator to the participants if not already there
+            final_participants = set(unpacked_participants)
+            final_participants.add(self.request.user)
 
-        event.participants.set(final_participants)
+            event.participants.set(final_participants)
 
         # Return the newly created event
         output_serializer = self.get_serializer(event)
