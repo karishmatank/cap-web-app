@@ -53,18 +53,18 @@ class ApplicationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        profile = user.userprofile
+        profile = user.profile
 
         if profile.role == "admin":
-            return Application.objects.filter(user__userprofile__role="mentee").order_by('status', 'name')
+            return Application.objects.filter(user__profile__role="mentee").order_by('status', 'name')
         elif profile.role == "mentor":
-            return Application.objects.filter(user__userprofile__mentors=user).order_by('status', 'name')
+            return Application.objects.filter(user__profile__mentors=user).order_by('status', 'name')
         else:
             return Application.objects.filter(user=self.request.user).order_by('status', 'name')
     
     def get_permissions(self):
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            profile = self.request.user.userprofile
+            profile = self.request.user.profile
             if profile.role != "mentee":
                 self.permission_denied(self.request, message="Read-only for mentors/admins.")
         return super().get_permissions()
@@ -98,18 +98,18 @@ class ToDoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        profile = user.userprofile
+        profile = user.profile
 
         if profile.role == "admin":
-            return ToDo.objects.filter(user__userprofile__role="mentee").order_by('due_date', 'application')
+            return ToDo.objects.filter(user__profile__role="mentee").order_by('due_date', 'application')
         elif profile.role == "mentor":
-            return ToDo.objects.filter(user__userprofile__mentors=user).order_by('due_date', 'application')
+            return ToDo.objects.filter(user__profile__mentors=user).order_by('due_date', 'application')
         else:
             return ToDo.objects.filter(user=self.request.user).order_by('due_date', 'application')
     
     def get_permissions(self):
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            profile = self.request.user.userprofile
+            profile = self.request.user.profile
             if profile.role != "mentee":
                 self.permission_denied(self.request, message="Read-only for mentors/admins.")
         return super().get_permissions()
@@ -120,14 +120,14 @@ class ToDoViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def application_choices(self, request):
         user = self.request.user
-        profile = user.userprofile
+        profile = user.profile
         
         if profile.role == "mentee":
             queryset = Application.objects.filter(user=self.request.user, status="in_progress").order_by('name')
         elif profile.role == "mentor":
-            queryset = Application.objects.filter(user__userprofile__mentors=user).order_by('name')
+            queryset = Application.objects.filter(user__profile__mentors=user).order_by('name')
         else:
-            queryset = Application.objects.filter(user__userprofile__role="mentee").order_by('name')
+            queryset = Application.objects.filter(user__profile__role="mentee").order_by('name')
         
         serializer = ApplicationChoiceSerializer(queryset, many=True)
         return Response(serializer.data)
@@ -148,18 +148,18 @@ class PlatformTemplateSubmissionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        profile = user.userprofile
+        profile = user.profile
 
         if profile.role == "mentee":
             return PlatformTemplateSubmission.objects.filter(user=self.request.user)
         elif profile.role == "mentor":
-            return PlatformTemplateSubmission.objects.filter(user__userprofile__mentors=user)
+            return PlatformTemplateSubmission.objects.filter(user__profile__mentors=user)
         else:
-            return PlatformTemplateSubmission.objects.filter(user__userprofile__role="mentee")
+            return PlatformTemplateSubmission.objects.filter(user__profile__role="mentee")
         
     def get_permissions(self):
         if self.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            profile = self.request.user.userprofile
+            profile = self.request.user.profile
             if profile.role != "mentee":
                 self.permission_denied(self.request, message="Read-only for mentors/admins.")
         return super().get_permissions()

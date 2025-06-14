@@ -16,7 +16,7 @@ import datetime
 @login_required
 def index(request):
     # Admins will be able to see all workshops
-    current_userprofile = request.user.userprofile
+    current_userprofile = request.user.profile
 
     if current_userprofile.role == 'admin':
         workshops = WorkshopMaterial.objects.all()
@@ -39,7 +39,7 @@ def index(request):
     workshops_ordered = workshops.order_by("grade", "number")
 
     return render(request, "workshops/landing.html", {
-        "workshops": workshops_ordered,
+        "workshops": workshops_ordered
     })
 
 def check_validity(request):

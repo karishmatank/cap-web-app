@@ -16,7 +16,7 @@
         {% endif %}
 
         <!--Create new workshop button for admins-->
-        {% if request.user.userprofile.role == 'admin' %}
+        {% if request.user.profile.role == 'admin' %}
             <div class="mb-4">
                 <a href="{% url 'workshops:create_workshop' %}" class="btn btn-lg btn-success">Create New Workshop</a>
             </div>
@@ -43,7 +43,7 @@
                                     </a>
                                 </h5>
                                 <p class="card-text">{{ workshop.description }}</p>
-                                {% if request.user.userprofile.role == 'admin' %}
+                                {% if request.user.profile.role == 'admin' %}
                                     <div class="d-inline-flex align-items-center gap-2">
                                         <a 
                                             href="{% url 'workshops:edit_workshop' workshop.id %}" 

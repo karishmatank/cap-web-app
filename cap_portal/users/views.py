@@ -188,7 +188,7 @@ def edit_profile(request):
 @permission_classes([IsAuthenticated])
 def get_current_user(request):
     user = request.user
-    profile = user.userprofile
+    profile = user.profile
     return Response({
         "id": user.id,
         "first_name": user.first_name,

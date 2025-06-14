@@ -25,6 +25,19 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// if ('serviceWorker' in navigator && 'PushManager' in window) {
+//   navigator.serviceWorker.ready.then(swReg => {
+//     Notification.requestPermission()
+//       .then(permission => {
+//         if (permission !== 'granted') throw new Error('No permission');
+//         return swReg.pushManager.subscribe({
+//           userVisibleOnly: true,
+//           applicationServerKey: 
+//         });
+//       })
+//   })
+// }
+
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals

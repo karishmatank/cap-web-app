@@ -10,3 +10,7 @@ def nav_links_api(request):
     with open(json_path) as f:
         data = json.load(f)
     return JsonResponse(data, safe=False)
+
+# def vapid_public_key(request):
+#     '''Returns the VAPID public key for users to subscribe to push notifications'''
+#     return JsonResponse({"publicKey": settings.VAPID_PUBLIC_KEY})
