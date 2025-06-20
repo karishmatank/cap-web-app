@@ -86,7 +86,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
                     "calendarId": e.category,
                     "category": "time" if not e.isAllDay else "allday",
                     "participants": [
-                        {'id': u.id, 'full_name': f'{u.first_name} {u.last_name}'}
+                        {'id': str(u.id), 'full_name': f'{u.first_name} {u.last_name}'}
                         for u in e.participants.all()
                     ],
                     "creator": f'{e.creator.first_name} {e.creator.last_name}',

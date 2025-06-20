@@ -12,7 +12,7 @@ class ApplicationSerializer(BaseModelSerializer):
         fields = '__all__'
 
 class ApplicationChoiceSerializer(BaseModelSerializer):
-    value = serializers.IntegerField(source="id")
+    value = serializers.CharField(source="id")
     label = serializers.CharField(source="name")
 
     class Meta(BaseModelSerializer.Meta):
@@ -21,6 +21,7 @@ class ApplicationChoiceSerializer(BaseModelSerializer):
 
 class ToDoSerializer(BaseModelSerializer):
     user = UserSerializer(read_only=True)
+    application = serializers.CharField(source='application.id', read_only=True)
     
     class Meta(BaseModelSerializer.Meta):
         model = ToDo
