@@ -41,7 +41,9 @@ function ApplicationList({ currentUser }) {
         .then((response) => {
             const extractedOptions = response.data.map((item) => item.platform_template);
             setPlatformOptions(extractedOptions);
-            setSelectedPlatforms(extractedOptions.map((item) => item.id));
+
+            const allIds = extractedOptions.map((item) => item.id);
+            setSelectedPlatforms([...allIds, null]);
         })
         .catch((error) => {
             console.error("Error retrieving application school platforms", error);
@@ -264,6 +266,7 @@ function ApplicationList({ currentUser }) {
         } else if (field === "category") {
             return categoryOptions.find((option) => option.value === value).label;
         } else if (field === "platform_template") {
+            if (value == null) return "";
             return platformOptions.find((option) => parseInt(option.id) === parseInt(value)).name;
         } 
         

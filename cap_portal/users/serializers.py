@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from .models import UserProfile
 from chat.serializers import UserSerializer
+from core.serializers import BaseModelSerializer
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(BaseModelSerializer):
     user = UserSerializer(read_only=True)
     mentors = UserSerializer(many=True, read_only=True)
 
-    class Meta:
+    class Meta(BaseModelSerializer.Meta):
         model = UserProfile
         fields = [
             "id", 

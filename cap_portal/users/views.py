@@ -190,7 +190,7 @@ def get_current_user(request):
     user = request.user
     profile = user.profile
     return Response({
-        "id": user.id,
+        "id": str(user.id),
         "first_name": user.first_name,
         "last_name": user.last_name,
         "role": profile.role
@@ -208,7 +208,7 @@ def search_users_by_name(request):
 
     data = [
         {
-            'id': user.id,
+            'id': str(user.id),
             'first_name': user.first_name,
             'last_name': user.last_name
         }
@@ -217,11 +217,11 @@ def search_users_by_name(request):
 
     # Add in custom group options
     data += [
-        {'id': -1, 'first_name': "All CAP", 'last_name': ""},
-        {'id': -2, 'first_name': "All 11th Grade CAP Mentees", 'last_name': ""},
-        {'id': -3, 'first_name': "All 11th Grade CAP Mentors", 'last_name': ""},
-        {'id': -4, 'first_name': "All 12th Grade CAP Mentees", 'last_name': ""},
-        {'id': -5, 'first_name': "All 12th Grade CAP Mentors", 'last_name': ""}
+        {'id': '-1', 'first_name': "All CAP", 'last_name': ""},
+        {'id': '-2', 'first_name': "All 11th Grade CAP Mentees", 'last_name': ""},
+        {'id': '-3', 'first_name': "All 11th Grade CAP Mentors", 'last_name': ""},
+        {'id': '-4', 'first_name': "All 12th Grade CAP Mentees", 'last_name': ""},
+        {'id': '-5', 'first_name': "All 12th Grade CAP Mentors", 'last_name': ""}
     ]
 
     return Response(data)

@@ -196,9 +196,9 @@ def start_private_chat(request):
     ).first()
 
     if existing_room:
-        return Response({'room_id': existing_room.id})
+        return Response({'room_id': str(existing_room.id)})
     
     # Otherwise, create a new room. Auto add the creator and target user
     new_room = ChatRoom.objects.create()
     new_room.members.add(request.user, target_user)
-    return Response({'room_id': new_room.id})
+    return Response({'room_id': str(new_room.id)})
