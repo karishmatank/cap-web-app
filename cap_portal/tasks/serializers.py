@@ -5,6 +5,7 @@ from core.serializers import BaseModelSerializer
 
 class ApplicationSerializer(BaseModelSerializer):
     user = UserSerializer(read_only=True)
+    platform_template = serializers.CharField(source='platform_template.id', read_only=True, allow_null=True)
 
     class Meta(BaseModelSerializer.Meta):
         model = Application
