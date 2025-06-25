@@ -144,7 +144,7 @@ def create_new_room(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_room(request, room_id):
-    room = ChatRoom.objects.get(id=room_id, members=request.user)
+    room = ChatRoom.objects.get(id=int(room_id), members=request.user)
 
     if 'name' in request.data:
         room.name = request.data['name']
@@ -162,7 +162,7 @@ def update_room(request, room_id):
 @permission_classes([IsAuthenticated])
 def room_info(request, room_id):
     try:
-        room = ChatRoom.objects.get(id=room_id, members=request.user)
+        room = ChatRoom.objects.get(id=int(room_id), members=request.user)
     except ChatRoom.DoesNotExist:
         return Response({"detail": "Room not found or access denied."}, status=404)
     
@@ -178,7 +178,7 @@ def start_private_chat(request):
     if not target_user_id:
         return Response({"error": "No target user ID supplied."}, status=400)
 
-    target_user = User.objects.get(id=target_user_id)
+    target_user = User.objects.get(id=int(target_user_id))
     if not target_user:
         return Response({"error": "Target user ID is invalid."}, status=400)
 

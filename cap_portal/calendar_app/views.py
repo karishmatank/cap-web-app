@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from tasks.models import ToDo, Application
 from users.models import UserProfile
@@ -143,6 +144,13 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
         # Get the participants list submitted
         submitted_participants = request.data.get('participants', None)
         data = request.data.copy()
+
+        if 'id' in data:
+            try:
+                data['id'] = int(data['id'])
+            except (ValueError, TypeError):
+                raise ValidationError({'id': 'Needs to be cast as integer'})
+
         data.pop('participants', None)
 
         serializer = self.get_serializer(instance, data=data, partial=partial)

@@ -169,7 +169,7 @@ class PlatformTemplateSubmissionViewSet(viewsets.ModelViewSet):
         created_objects = []
 
         for platform_id in platform_ids:
-            platform_obj = PlatformTemplate.objects.get(id=platform_id)
+            platform_obj = PlatformTemplate.objects.get(id=int(platform_id))
 
             # Create PlatformTemplateSubmission object
             obj, created = PlatformTemplateSubmission.objects.get_or_create(
