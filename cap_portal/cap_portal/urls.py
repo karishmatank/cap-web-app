@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from .spa_views import ChatSPAView, DirectorySPAView, ApplicationsSPAView
 
 urlpatterns = [
@@ -30,5 +30,12 @@ urlpatterns = [
     # Browser-facing React SPAs. In order of list in settings.py TEMPLATES[0].DIRS
     path('messages/', ChatSPAView.as_view(), name="messages"),
     path('directory/', DirectorySPAView.as_view(), name="directory"),
-    path('applications/', ApplicationsSPAView.as_view(), name="applications")
+    path('applications/', ApplicationsSPAView.as_view(), name="applications"),
+
+    # If a user refreshes while in a chat room, Django currently doesn't know what to serve so it gives a 404 error
+    re_path(
+        r"^chat/[0-9]+/?$",
+        ChatSPAView.as_view(),
+        name="chat-room"
+    )
 ]
