@@ -54,11 +54,11 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                 setMessages((prev) => [...prev, data.message]);  /* Always appends to latest version of the state */
                 hasScrolledOnLoad.current = false; // Adding this on to be able to trigger the scroll to bottom (see next)
             } else if (data.type === "typing") {
-                if (data.user.id !== currentUser.id) {
+                if (data.user.id.toString() !== currentUser.id) {
                     setTypingUser(`${data.user.first_name} ${data.user.last_name}`);
                     setTimeout(() => {
                         setTypingUser(null);
-                    }, 2000);
+                    }, 3000);
                 }
             }
         }
@@ -87,7 +87,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
         if (typingTimeout.current) clearTimeout(typingTimeout.current);
         typingTimeout.current = setTimeout(() => {
             // Not sending a stop typing message for now
-        }, 2000);
+        }, 3000);
     };
 
     /* When we receive a new message ("messages" is refreshed), 
@@ -264,7 +264,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                         <div className="day-header">─── {date} ───</div>
                         {messages.map((msg, index) => {
                             
-                            const isOwnMessage = msg.user.id === currentUser?.id;
+                            const isOwnMessage = msg.user.id.toString() === currentUser?.id;
                             const previous = index > 0 ? messages[index-1] : null;
                             const showSender = showSenderName(msg, previous);
 

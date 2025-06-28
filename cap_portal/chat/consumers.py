@@ -15,6 +15,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
+        self.channel_layer._ping_interval = 30  # seconds between Redis heartbeats
+
         self.room_id = self.scope["url_route"]["kwargs"]["room_id"]
 
         # Get ChatRoom

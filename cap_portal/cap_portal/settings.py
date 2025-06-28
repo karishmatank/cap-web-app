@@ -197,6 +197,7 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [env("REDIS_URL", default="redis://127.0.0.1:6379/0")],
+            "expiry": 60,  # keys expire after 60s
         },
     },
 }
