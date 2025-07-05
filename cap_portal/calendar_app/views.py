@@ -26,15 +26,15 @@ def unpack_participants(submitted_participants):
     mentors_12 = User.objects.filter(mentees__user__in=mentees_12)
 
     for participant in submitted_participants:
-        if participant == -1:
+        if participant == '-1':
             unpacked_participants.update(User.objects.all())
-        elif participant == -2:
+        elif participant == '-2':
             unpacked_participants.update(mentees_11)
-        elif participant == -4:
+        elif participant == '-4':
             unpacked_participants.update(mentees_12)
-        elif participant == -3:
+        elif participant == '-3':
             unpacked_participants.update(mentors_11)
-        elif participant == -5:
+        elif participant == '-5':
             unpacked_participants.update(mentors_12)
         else:
             try:
@@ -131,9 +131,9 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
         event.participants.set(final_participants)
 
         # Push notification logic
-        recipient_ids = list(final_participants.exclude(id=self.request.user.id).values_list('id', flat=True))
+        recipient_ids = [str(user.id) for user in final_participants if user.id != request.user.id]
         beams_client.publish_to_users(
-            user_ids=[str(i) for i in recipient_ids],
+            user_ids=recipient_ids,
             publish_body={
                 'web': {
                     'notification': {
@@ -155,7 +155,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
 
         # Tell the serializer which model entry we're updating
         instance = self.get_object()
-        old_participants = set(instance.participants)
+        old_participant_ids = list(instance.participants.values_list('id', flat=True))
 
         # Get the participants list submitted
         submitted_participants = request.data.get('participants', None)
@@ -190,19 +190,21 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
             final_participants.add(self.request.user)
 
             event.participants.set(final_participants)
+
+            final_participant_ids = [u.id for u in final_participants if u.id != request.user.id]
         else:
-            final_participants = old_participants
+            final_participant_ids = old_participant_ids
         
         # Were fields other than participants changed? If so, send push to everyone. If not, only to new participants
         other_fields_changed = bool(serializer.validated_data)
         if other_fields_changed:
-            recipients = final_participants
+            recipient_ids = final_participant_ids
         elif submitted_participants is not None:
-            recipients = final_participants - old_participants
+            recipient_ids = [i for i in final_participant_ids if i not in old_participant_ids]
         else:
-            recipients = set()
+            recipient_ids = []
         
-        recipient_ids = list(recipients.exclude(id=self.request.user.id).values_list('id', flat=True))
+        recipient_ids = [i for i in recipient_ids if i != self.request.user.id]
 
         if recipient_ids:
             beams_client.publish_to_users(
