@@ -28,6 +28,11 @@ function Navbar () {
 
     // Handle post request for logout
     const handleLogout = () => {
+        const beamsClient = window.beamsClient;
+        if (beamsClient) {
+            beamsClient.stop().then("Beams client stopped successfully").catch(console.error);
+        }
+        
         axios.post("/logout/")
         .then(() => {
             window.location.href = '/login/'

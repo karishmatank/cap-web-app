@@ -34,9 +34,9 @@
                             {% if link.method == "get" %}
                                 <a class="nav-link" href="{{ link.path }}">{{ link.name }}</a>
                             {% elif link.method == "post" %}
-                                <form action="{{ link.path }}" method="post">
+                                <form id="logout-form" action="{{ link.path }}" method="post">
                                     {% csrf_token %}
-                                    <button type="submit" class="nav-link">{{ link.name }}</button>
+                                    <button id="logout-btn" type="submit" class="nav-link">{{ link.name }}</button>
                                 </form>
                             {% endif %}
                         </li>
@@ -46,3 +46,23 @@
         </div>
     </div>
 </nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const logoutBtn = document.getElementById('logout-btn');
+        if (!logoutBtn) return;
+
+        logoutBtn.addEventListener('click', (event) => {
+            // Prevent normal form submit
+            event.preventDefault();
+
+            // Tear down Beams client
+            if (window.beamsClient) {
+                window.beamsClient.stop().catch(console.error);
+            }
+
+            // Proceed
+            document.getElementById('logout-form').submit();
+        });
+    });
+</script>

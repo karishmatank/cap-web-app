@@ -6,6 +6,7 @@ import Searchbar from './components/Searchbar';
 import DirectoryResults from './components/DirectoryResults';
 import useCurrentUser from './hooks/useCurrentUser';
 import { useState, useEffect } from "react";
+import PushInitializer from './components/PushInitializer';
 
 function Layout() {
   const [query, setQuery] = useState("");
@@ -70,6 +71,7 @@ function App() {
   
   return (
     <Router>
+      <PushInitializer />
       <Layout />
     </Router>
   );

@@ -208,3 +208,12 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 # VAPID keys
 VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY")
+
+# Pusher Beams keys
+BEAMS_INSTANCE_ID=env("BEAMS_INSTANCE_ID")
+BEAMS_SECRET_KEY=env("BEAMS_SECRET_KEY")
+
+# Extend session settings to avoid users being auto logged out unless they explicitly click "Log Out"
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 60*60*24*30  # seconds for 30 days
+SESSION_SAVE_EVERY_REQUEST = True

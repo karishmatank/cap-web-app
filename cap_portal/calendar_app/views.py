@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from tasks.models import ToDo, Application
 from users.models import UserProfile
 from datetime import datetime
+from cap_portal.beams import beams_client
 
 
 # Create your views here.
@@ -129,6 +130,20 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
 
         event.participants.set(final_participants)
 
+        # Push notification logic
+        recipient_ids = list(final_participants.exclude(id=self.request.user.id).values_list('id', flat=True))
+        beams_client.publish_to_users(
+            user_ids=[str(i) for i in recipient_ids],
+            publish_body={
+                'web': {
+                    'notification': {
+                        'title': f"New event: {event.name}",
+                        'body': event.start,
+                    }
+                }
+            },
+        )
+
         # Return the newly created event
         output_serializer = self.get_serializer(event)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
@@ -140,6 +155,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
 
         # Tell the serializer which model entry we're updating
         instance = self.get_object()
+        old_participants = set(instance.participants)
 
         # Get the participants list submitted
         submitted_participants = request.data.get('participants', None)
@@ -174,6 +190,32 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
             final_participants.add(self.request.user)
 
             event.participants.set(final_participants)
+        else:
+            final_participants = old_participants
+        
+        # Were fields other than participants changed? If so, send push to everyone. If not, only to new participants
+        other_fields_changed = bool(serializer.validated_data)
+        if other_fields_changed:
+            recipients = final_participants
+        elif submitted_participants is not None:
+            recipients = final_participants - old_participants
+        else:
+            recipients = set()
+        
+        recipient_ids = list(recipients.exclude(id=self.request.user.id).values_list('id', flat=True))
+
+        if recipient_ids:
+            beams_client.publish_to_users(
+                user_ids=[str(i) for i in recipient_ids],
+                publish_body={
+                    'web': {
+                        'notification': {
+                            'title': f"Updated event: {event.name}",
+                            'body': event.start,
+                        }
+                    }
+                },
+            )
 
         # Return the newly created event
         output_serializer = self.get_serializer(event)

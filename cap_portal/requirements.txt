@@ -31,10 +31,12 @@ multidict==6.4.4
 packaging==25.0
 propcache==0.3.1
 psycopg2-binary==2.9.10
+pusher_push_notifications==2.0.2
 py-vapid==1.9.2
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pycparser==2.22
+PyJWT==2.10.1
 pyOpenSSL==25.0.0
 pywebpush==2.0.3
 redis==5.2.1

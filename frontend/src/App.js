@@ -11,6 +11,7 @@ import { getCookie } from './utils/csrf';
 import useIsMobile from './hooks/useIsMobile';
 import useCurrentUser from './hooks/useCurrentUser';
 import { Offcanvas } from 'bootstrap';
+import PushInitializer from './components/PushInitializer';
 
 function Layout() {
   /* Get current user at start up */
@@ -209,6 +210,7 @@ function App() {
   
   return (
     <Router>
+      <PushInitializer />
       <Layout />
     </Router>
   );

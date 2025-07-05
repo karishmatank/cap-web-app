@@ -6,6 +6,7 @@ import ApplicationList from './components/ApplicationList';
 import ApplicationPlatformSurvey from './components/ApplicationPlatformSurvey';
 import ToDoFullList from './components/ToDoFullList';
 import { Tab, Tabs } from 'react-bootstrap';
+import PushInitializer from './components/PushInitializer';
 
 function Layout() {
   const { currentUser, loading } = useCurrentUser();
@@ -47,6 +48,7 @@ function App() {
   
   return (
     <Router>
+      <PushInitializer />
       <Layout />
     </Router>
   );

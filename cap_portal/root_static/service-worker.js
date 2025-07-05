@@ -1,5 +1,8 @@
 /* eslint-disable no-restricted-globals */
 
+// Pusher Beams service worker
+importScripts('https://js.pusher.com/beams/service-worker.js');
+
 // Load the workbox runtime
 importScripts(
     'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js'

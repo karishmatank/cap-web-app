@@ -53,5 +53,6 @@ urlpatterns = [
     # API views
     path("users/api/me/", views.get_current_user),
     path("users/api/search/", views.search_users_by_name),
-    path("users/api/community-search/", views.CommunityDirectoryListView.as_view())
+    path("users/api/community-search/", views.CommunityDirectoryListView.as_view()),
+    path("users/api/beams-auth/", views.beams_auth)
 ]

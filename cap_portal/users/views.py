@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import logout_then_login, PasswordChangeView, PasswordResetView, PasswordResetConfirmView
 from django.db.models import Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 
@@ -18,6 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from datetime import datetime
+from cap_portal.beams import beams_client
 
 # Create your views here.
 class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
@@ -253,3 +254,10 @@ class CommunityDirectoryListView(generics.ListAPIView):
             queryset = queryset.filter(role=role)
         
         return queryset
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def beams_auth(request):
+    user = request.user
+    token = beams_client.generate_token(str(user.id))
+    return JsonResponse(token)
