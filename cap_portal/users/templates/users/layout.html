@@ -99,17 +99,54 @@
             }
 
             document.addEventListener('DOMContentLoaded', async () => {
-                // Wait until the service worker is active
-                const registration = await navigator.serviceWorker.ready;
-                log('🔑 navigator.serviceWorker.ready resolved');
                 const currentUserId = "{{ request.user.id }}";
                 log('👤 currentUserId = ' + currentUserId);
+                
+                // Check if we're in a PWA context on iOS
+                const isIOSPWA = window.navigator.standalone === true;
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+                log('📱 iOS PWA mode: ' + isIOSPWA);
+                log('📱 Standalone mode: ' + isStandalone);
+                
+                if (!isIOSPWA && !isStandalone) {
+                    log('⚠️ Not in PWA mode - push notifications may not work on iOS');
+                    // Show instruction to install PWA
+                    const installMsg = document.createElement('div');
+                    installMsg.innerHTML = `
+                        <div style="background: #ffeb3b; padding: 10px; margin: 10px; border-radius: 5px;">
+                            📱 For notifications on iOS: Add this app to your home screen first!
+                        </div>
+                    `;
+                    document.body.insertBefore(installMsg, document.body.firstChild);
+                }
+
+                // Wait for service worker to be ready with timeout
+                let registration;
+                try {
+                    registration = await Promise.race([
+                        navigator.serviceWorker.ready,
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('SW timeout')), 10000)
+                        )
+                    ]);
+                    log('🔑 Service Worker ready');
+                } catch (error) {
+                    log('❌ Service Worker not ready: ' + error.message);
+                    return;
+                }
+
+                // Check if SW is actually controlling the page
+                if (!navigator.serviceWorker.controller) {
+                    log('⚠️ No SW controller - refreshing page...');
+                    // On iOS, sometimes a refresh is needed
+                    window.location.reload();
+                    return;
+                }
+
                 const perm = Notification.permission;
                 log('🔐 Notification.permission = ' + perm);
-                const shouldAsk = perm !== 'granted';
-                log('⁉️ shouldAsk = ' + shouldAsk);
-
-                // Initialize Beams for push notifications
+                
+                // Initialize Beams
                 const beamsClient = new PusherPushNotifications.Client({
                     instanceId: '8d02d63d-a0b7-4438-99f6-20118fe15ab1',
                     serviceWorkerRegistration: registration,
@@ -119,76 +156,86 @@
                     url: '/users/api/beams-auth/'
                 });
 
-                // Start the client
+                // Auto-start if already granted
                 if (perm === 'granted') {
                     log('🚀 Auto-starting Beams (already granted)');
                     try {
-                        await beamsClient.start();
-                        log('✅ beamsClient.start() resolved');
-                        try {
-                            const token = await beamsClient.setUserId(currentUserId, tokenProvider);
-                            log('🔑 setUserId() succeeded; deviceId=' + await beamsClient.getDeviceId());
-                        } catch (err) {
-                            log('❌ setUserId() ERROR: ' + (err.message || JSON.stringify(err)));
-                        }
-                        log('registration state: ' + await beamsClient.getRegistrationState());
-
-                        // Expose it globally
-                        window.beamsClient = beamsClient;
-
-                        console.log('Beams started with existing SW!');
+                        await startBeams(beamsClient, currentUserId, tokenProvider);
                     } catch (error) {
-                        log('❌ Auto-start error: ' + err);
-                        console.error('Beams failed to start: ', error);
+                        log('❌ Auto-start error: ' + error.message);
                     }
                 }
 
-                if (shouldAsk) {
+                // Show enable button if permission needed
+                if (perm === 'default' || perm === 'denied') {
                     const btn = document.getElementById('enable-push');
                     if (btn) {
                         log('🔔 Showing enable-push button');
                         btn.style.display = 'inline-block';
                         btn.addEventListener('click', async () => {
                             log('🖱️ Enable-push clicked');
+                            
+                            // Request permission
                             const permission = await Notification.requestPermission();
-
                             log('💬 requestPermission → ' + permission);
+                            
                             if (permission !== 'granted') {
+                                log('❌ Permission denied');
                                 return;
                             }
 
-                            // Grab active SW registration
-                            const reg = await navigator.serviceWorker.ready;
-
-                            // Check if there is an existing subscription; unsubscribe it if so
-                            const existing = await reg.pushManager.getSubscription();
-                            if (existing) {
-                                log('🗑️ Unsubscribing underlying PushManager subscription');
-                                await existing.unsubscribe();
-                            }
-
-                            // now re-start Beams, which will under-the-hood re-subscribe
-                            log('🚀 Forcing beamsClient.start() again');
-                            await beamsClient.start();
-                            log('✅ beamsClient.start() resolved');
-                                
+                            // Clear any existing subscriptions
                             try {
-                                const token = await beamsClient.setUserId(currentUserId, tokenProvider);
-                                log('🔑 setUserId() after click succeeded; deviceId=' + await beamsClient.getDeviceId());
-                            } catch (err) {
-                                log('❌ setUserId() ERROR: ' + (err.message || JSON.stringify(err)));
+                                const existing = await registration.pushManager.getSubscription();
+                                if (existing) {
+                                    log('🗑️ Unsubscribing existing subscription');
+                                    await existing.unsubscribe();
+                                }
+                            } catch (error) {
+                                log('⚠️ Error checking existing subscription: ' + error.message);
                             }
 
-                            // Expose it globally
-                            window.beamsClient = beamsClient;
-                            log('📬 Beams started after permission');
-                            // console.log('Beams started on click with existing SW!');
-                            btn.style.display = 'none';
-                            
+                            // Start Beams
+                            try {
+                                await startBeams(beamsClient, currentUserId, tokenProvider);
+                                btn.style.display = 'none';
+                                log('✅ Beams started successfully after permission');
+                            } catch (error) {
+                                log('❌ Failed to start Beams: ' + error.message);
+                            }
                         });
                     }
                 }
             });
+
+            async function startBeams(beamsClient, userId, tokenProvider) {
+                log('🚀 Starting Beams...');
+                
+                await beamsClient.start();
+                log('✅ beamsClient.start() resolved');
+                
+                // Set user ID
+                try {
+                    await beamsClient.setUserId(userId, tokenProvider);
+                    const deviceId = await beamsClient.getDeviceId();
+                    log('🔑 setUserId() succeeded; deviceId=' + deviceId);
+                    
+                    if (!deviceId) {
+                        throw new Error('Device ID is null - registration failed');
+                    }
+                    
+                    const regState = await beamsClient.getRegistrationState();
+                    log('📋 Registration state: ' + regState);
+                    
+                    // Expose globally
+                    window.beamsClient = beamsClient;
+                    
+                    return true;
+                } catch (error) {
+                    log('❌ setUserId() ERROR: ' + error.message);
+                    throw error;
+                }
+            }
         </script>
     </body>
 </html>
