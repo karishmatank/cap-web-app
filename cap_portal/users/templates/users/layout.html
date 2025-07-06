@@ -125,9 +125,12 @@
                     try {
                         await beamsClient.start();
                         log('✅ beamsClient.start() resolved');
-                        await beamsClient.setUserId(currentUserId, tokenProvider);
-                        log('Printing beamsClient: ' + beamsClient);
-                        log('✅ setUserId() resolved; deviceId=' + await beamsClient.getDeviceId());
+                        try {
+                            const token = await beamsClient.setUserId(currentUserId, tokenProvider);
+                            log('🔑 setUserId() succeeded; deviceId=' + await beamsClient.getDeviceId());
+                        } catch (err) {
+                            log('❌ setUserId() ERROR: ' + (err.message || JSON.stringify(err)));
+                        }
                         log('registration state: ' + await beamsClient.getRegistrationState());
 
                         // Expose it globally
@@ -158,8 +161,12 @@
                                 log('🚀 Starting Beams after permission granted');
                                 await beamsClient.start();
                                 log('✅ beamsClient.start() after click resolved');
-                                await beamsClient.setUserId(currentUserId, tokenProvider);
-                                log('✅ setUserId() after click resolved; deviceId=' + await beamsClient.getDeviceId());
+                                try {
+                                    const token = await beamsClient.setUserId(currentUserId, tokenProvider);
+                                    log('🔑 setUserId() after click succeeded; deviceId=' + await beamsClient.getDeviceId());
+                                } catch (err) {
+                                    log('❌ setUserId() ERROR: ' + (err.message || JSON.stringify(err)));
+                                }
 
                                 // Expose it globally
                                 window.beamsClient = beamsClient;
