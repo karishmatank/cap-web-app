@@ -28,7 +28,39 @@
         <button id="enable-push" style="display: none;">🔔 Enable Notifications</button>
         {% block body %}
         {% endblock %}
+
+        <!-- Eruda: small on-screen console for mobile -->
+        <script src="https://cdn.jsdelivr.net/npm/eruda@2.5.1"></script>
+        <script>eruda.init();</script>
+
+        <pre id="debug-log" style="
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-height: 40%;
+            overflow: auto;
+            background: rgba(0,0,0,0.8);
+            color: #0f0;
+            font-size: 12px;
+            z-index: 9999;
+        "></pre>
+
         <script>
+            function log(msg) {
+                const el = document.getElementById('debug-log');
+                el.textContent += msg + '\n';
+                console.log(msg);
+            }
+        </script>
+
+        <script>
+
+            log('🛠️ Landing page loaded');
+            log('User ID = {{ request.user.id }}');
+            log('ServiceWorker in navigator? ' + ('serviceWorker' in navigator));
+            log('Notification.permission = ' + Notification.permission);
+
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker
                     .register('/service-worker.js')
@@ -73,8 +105,10 @@
                     if (btn) {
                         btn.style.display = 'inline-block';
                         btn.addEventListener('click', async () => {
+                            log('🖱️ Enable-push clicked');
                             const permission = await Notification.requestPermission();
 
+                            log('💬 requestPermission → ' + permission);
                             if (permission !== 'granted') {
                                 return;
                             }
@@ -85,11 +119,12 @@
 
                                 // Expose it globally
                                 window.beamsClient = beamsClient;
-
-                                console.log('Beams started on click with existing SW!');
+                                log('📬 Beams started after permission');
+                                // console.log('Beams started on click with existing SW!');
                                 btn.style.display = 'none';
                             } catch (error) {
-                                console.error('Beams failed to start on click: ', error);
+                                log('❌ Beams init error: ' + e);
+                                // console.error('Beams failed to start on click: ', error);
                             }
                         });
                     }
