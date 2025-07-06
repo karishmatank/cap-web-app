@@ -157,26 +157,34 @@
                                 return;
                             }
 
-                            try {
-                                log('🚀 Starting Beams after permission granted');
-                                await beamsClient.start();
-                                log('✅ beamsClient.start() after click resolved');
-                                try {
-                                    const token = await beamsClient.setUserId(currentUserId, tokenProvider);
-                                    log('🔑 setUserId() after click succeeded; deviceId=' + await beamsClient.getDeviceId());
-                                } catch (err) {
-                                    log('❌ setUserId() ERROR: ' + (err.message || JSON.stringify(err)));
-                                }
+                            // Grab active SW registration
+                            const reg = await navigator.serviceWorker.ready;
 
-                                // Expose it globally
-                                window.beamsClient = beamsClient;
-                                log('📬 Beams started after permission');
-                                // console.log('Beams started on click with existing SW!');
-                                btn.style.display = 'none';
-                            } catch (error) {
-                                log('❌ Beams init error: ' + e);
-                                // console.error('Beams failed to start on click: ', error);
+                            // Check if there is an existing subscription; unsubscribe it if so
+                            const existing = await reg.pushManager.getSubscription();
+                            if (existing) {
+                                log('🗑️ Unsubscribing underlying PushManager subscription');
+                                await existing.unsubscribe();
                             }
+
+                            // now re-start Beams, which will under-the-hood re-subscribe
+                            log('🚀 Forcing beamsClient.start() again');
+                            await beamsClient.start();
+                            log('✅ beamsClient.start() resolved');
+                                
+                            try {
+                                const token = await beamsClient.setUserId(currentUserId, tokenProvider);
+                                log('🔑 setUserId() after click succeeded; deviceId=' + await beamsClient.getDeviceId());
+                            } catch (err) {
+                                log('❌ setUserId() ERROR: ' + (err.message || JSON.stringify(err)));
+                            }
+
+                            // Expose it globally
+                            window.beamsClient = beamsClient;
+                            log('📬 Beams started after permission');
+                            // console.log('Beams started on click with existing SW!');
+                            btn.style.display = 'none';
+                            
                         });
                     }
                 }
