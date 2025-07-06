@@ -26,15 +26,15 @@ def unpack_participants(submitted_participants):
     mentors_12 = User.objects.filter(mentees__user__in=mentees_12)
 
     for participant in submitted_participants:
-        if participant == '-1':
+        if participant == -1:
             unpacked_participants.update(User.objects.all())
-        elif participant == '-2':
+        elif participant == -2:
             unpacked_participants.update(mentees_11)
-        elif participant == '-4':
+        elif participant == -4:
             unpacked_participants.update(mentees_12)
-        elif participant == '-3':
+        elif participant == -3:
             unpacked_participants.update(mentors_11)
-        elif participant == '-5':
+        elif participant == -5:
             unpacked_participants.update(mentors_12)
         else:
             try:
@@ -138,7 +138,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
                 'web': {
                     'notification': {
                         'title': f"New event: {event.name}",
-                        'body': event.start,
+                        'body': event.start.strftime("%B %d at %I:%M %p"),
                     }
                 }
             },
@@ -213,7 +213,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
                     'web': {
                         'notification': {
                             'title': f"Updated event: {event.name}",
-                            'body': event.start,
+                            'body': event.start.strftime("%B %d at %I:%M %p"),
                         }
                     }
                 },
