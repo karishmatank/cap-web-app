@@ -57,23 +57,45 @@
         <script>
 
             log('🛠️ Landing page loaded');
-            log('User ID = {{ request.user.id }}');
-            log('ServiceWorker in navigator? ' + ('serviceWorker' in navigator));
-            log('Notification.permission = ' + Notification.permission);
+            log('navigator.standalone: ' + !!window.navigator.standalone);
+            log('display-mode standalone?: ' +
+                window.matchMedia('(display-mode: standalone)').matches);
+            log('serviceWorker supported?: ' + ('serviceWorker' in navigator));
+            log('Notification API available?: ' + ('Notification' in window));
+            if ('Notification' in window) {
+                log('Notification.permission: ' + Notification.permission);
+            }
 
+            // if ('serviceWorker' in navigator) {
+            //     navigator.serviceWorker
+            //         .register('/service-worker.js')
+            //         .then(reg => console.log('SW registered: ', reg.scope))
+            //         .catch(err => console.error('SW registration failed: ', err));
+            // }
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker
-                    .register('/service-worker.js')
-                    .then(reg => console.log('SW registered: ', reg.scope))
-                    .catch(err => console.error('SW registration failed: ', err));
+                navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => {
+                    log('✅ SW registered, scope=' + reg.scope);
+                    return navigator.serviceWorker.ready;
+                })
+                .then(reg => {
+                    log('✅ SW ready, active script=' + reg.active.scriptURL);
+                })
+                .catch(err => {
+                    log('❌ SW registration/ready failed: ' + err);
+                });
             }
 
             document.addEventListener('DOMContentLoaded', async () => {
                 // Wait until the service worker is active
                 const registration = await navigator.serviceWorker.ready;
+                log('🔑 navigator.serviceWorker.ready resolved');
                 const currentUserId = "{{ request.user.id }}";
+                log('👤 currentUserId = ' + currentUserId);
                 const perm = Notification.permission;
+                log('🔐 Notification.permission = ' + perm);
                 const shouldAsk = perm !== 'granted';
+                log('⁉️ shouldAsk = ' + shouldAsk);
 
                 // Initialize Beams for push notifications
                 const beamsClient = new PusherPushNotifications.Client({
@@ -87,15 +109,19 @@
 
                 // Start the client
                 if (perm === 'granted') {
+                    log('🚀 Auto-starting Beams (already granted)');
                     try {
                         await beamsClient.start();
+                        log('✅ beamsClient.start() resolved');
                         await beamsClient.setUserId(currentUserId, tokenProvider);
+                        log('✅ setUserId() resolved; deviceId=' + await beamsClient.getDeviceId());
 
                         // Expose it globally
                         window.beamsClient = beamsClient;
 
                         console.log('Beams started with existing SW!');
                     } catch (error) {
+                        log('❌ Auto-start error: ' + err);
                         console.error('Beams failed to start: ', error);
                     }
                 }
@@ -103,6 +129,7 @@
                 if (shouldAsk) {
                     const btn = document.getElementById('enable-push');
                     if (btn) {
+                        log('🔔 Showing enable-push button');
                         btn.style.display = 'inline-block';
                         btn.addEventListener('click', async () => {
                             log('🖱️ Enable-push clicked');
@@ -114,8 +141,11 @@
                             }
 
                             try {
+                                log('🚀 Starting Beams after permission granted');
                                 await beamsClient.start();
+                                log('✅ beamsClient.start() after click resolved');
                                 await beamsClient.setUserId(currentUserId, tokenProvider);
+                                log('✅ setUserId() after click resolved; deviceId=' + await beamsClient.getDeviceId());
 
                                 // Expose it globally
                                 window.beamsClient = beamsClient;
