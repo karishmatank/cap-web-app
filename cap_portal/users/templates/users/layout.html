@@ -128,6 +128,7 @@
                         await beamsClient.setUserId(currentUserId, tokenProvider);
                         log('Printing beamsClient: ' + beamsClient);
                         log('✅ setUserId() resolved; deviceId=' + await beamsClient.getDeviceId());
+                        log('registration state: ' + await beamsClient.getRegistrationState());
 
                         // Expose it globally
                         window.beamsClient = beamsClient;
