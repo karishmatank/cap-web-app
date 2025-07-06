@@ -56,10 +56,10 @@
 
         <script>
 
+            // Initial diagnostics
             log('🛠️ Landing page loaded');
             log('navigator.standalone: ' + !!window.navigator.standalone);
-            log('display-mode standalone?: ' +
-                window.matchMedia('(display-mode: standalone)').matches);
+            log('display-mode standalone?: ' + window.matchMedia('(display-mode: standalone)').matches);
             log('serviceWorker supported?: ' + ('serviceWorker' in navigator));
             log('SW controlling page?: ' + !!navigator.serviceWorker.controller);
             log('Notification API available?: ' + ('Notification' in window));
@@ -67,12 +67,228 @@
                 log('Notification.permission: ' + Notification.permission);
             }
 
-            // if ('serviceWorker' in navigator) {
-            //     navigator.serviceWorker
-            //         .register('/service-worker.js')
-            //         .then(reg => console.log('SW registered: ', reg.scope))
-            //         .catch(err => console.error('SW registration failed: ', err));
-            // }
+            // iOS-specific diagnostic checks
+            function checkIOSSpecificIssues() {
+                const userAgent = navigator.userAgent;
+                const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+                log('📱 Is iOS: ' + isIOS);
+                
+                if (isIOS) {
+                    // Check iOS version
+                    const iOSVersion = userAgent.match(/OS (\d+)_(\d+)/);
+                    if (iOSVersion) {
+                        const major = parseInt(iOSVersion[1]);
+                        const minor = parseInt(iOSVersion[2]);
+                        log('📱 iOS Version: ' + major + '.' + minor);
+                        
+                        // iOS 16.4+ required for web push
+                        if (major < 16 || (major === 16 && minor < 4)) {
+                            log('❌ iOS version too old for web push notifications');
+                            return false;
+                        }
+                    }
+                    
+                    // Check if PWA is installed
+                    const isPWA = window.navigator.standalone === true;
+                    log('📱 PWA installed (standalone): ' + isPWA);
+                    
+                    if (!isPWA) {
+                        log('❌ PWA not installed - this is required for push notifications on iOS');
+                        return false;
+                    }
+                    
+                    // Check if we're in the right display mode
+                    const displayMode = window.matchMedia('(display-mode: standalone)').matches;
+                    log('📱 Display mode standalone: ' + displayMode);
+                    
+                    // Check if Safari is the browser
+                    const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+                    log('📱 Is Safari: ' + isSafari);
+                    
+                    // Check if we have proper web app manifest
+                    const manifestLink = document.querySelector('link[rel="manifest"]');
+                    if (manifestLink) {
+                        log('📄 Manifest link found');
+                        // Try to fetch and validate manifest
+                        fetch(manifestLink.href)
+                            .then(response => response.json())
+                            .then(manifest => {
+                                log('📄 Manifest display mode: ' + manifest.display);
+                                log('📄 Manifest start_url: ' + manifest.start_url);
+                                log('📄 Manifest icons count: ' + (manifest.icons ? manifest.icons.length : 0));
+                                
+                                if (manifest.display !== 'standalone' && manifest.display !== 'fullscreen') {
+                                    log('⚠️ Manifest display mode should be "standalone" or "fullscreen"');
+                                }
+                            })
+                            .catch(error => {
+                                log('❌ Could not fetch manifest: ' + error.message);
+                            });
+                    } else {
+                        log('❌ No manifest link found');
+                    }
+                }
+                
+                return true;
+            }
+
+            // Test basic push subscription capability
+            async function testBasicPushSubscription() {
+                log('🧪 Testing basic push subscription...');
+                
+                try {
+                    const registration = await navigator.serviceWorker.ready;
+                    const pushManager = registration.pushManager;
+                    
+                    if (!pushManager) {
+                        log('❌ PushManager not available');
+                        return false;
+                    }
+                    
+                    // Try to create a basic subscription
+                    const subscription = await pushManager.subscribe({
+                        userVisibleOnly: true,
+                        // Don't use applicationServerKey for basic test
+                    });
+                    
+                    if (subscription) {
+                        log('✅ Basic push subscription successful');
+                        log('📋 Subscription endpoint: ' + subscription.endpoint.substring(0, 50) + '...');
+                        
+                        // Clean up
+                        await subscription.unsubscribe();
+                        log('✅ Test subscription cleaned up');
+                        return true;
+                    } else {
+                        log('❌ Basic push subscription failed - no subscription returned');
+                        return false;
+                    }
+                    
+                } catch (error) {
+                    log('❌ Basic push subscription error: ' + error.message);
+                    log('❌ Error name: ' + error.name);
+                    
+                    // Check for specific iOS errors
+                    if (error.name === 'NotAllowedError') {
+                        log('❌ Permission denied or not in PWA mode');
+                    } else if (error.name === 'NotSupportedError') {
+                        log('❌ Push notifications not supported');
+                    } else if (error.name === 'AbortError') {
+                        log('❌ Operation aborted - possibly due to iOS restrictions');
+                    }
+                    
+                    return false;
+                }
+            }
+
+            // Enhanced startBeams function with detailed logging
+            async function startBeams(beamsClient, userId, tokenProvider) {
+                log('🚀 Starting Beams...');
+                
+                // Check if we can actually subscribe to push notifications
+                try {
+                    const registration = await navigator.serviceWorker.ready;
+                    log('📋 SW Registration details:');
+                    log('   - scope: ' + registration.scope);
+                    log('   - active worker: ' + !!registration.active);
+                    log('   - installing worker: ' + !!registration.installing);
+                    log('   - waiting worker: ' + !!registration.waiting);
+                    
+                    // Test if push manager is available and working
+                    const pushManager = registration.pushManager;
+                    log('🔍 Push Manager available: ' + !!pushManager);
+                    
+                    if (pushManager) {
+                        // Check current subscription
+                        const currentSub = await pushManager.getSubscription();
+                        log('📋 Current push subscription: ' + (currentSub ? 'EXISTS' : 'NONE'));
+                        
+                        if (currentSub) {
+                            log('📋 Current subscription endpoint: ' + currentSub.endpoint.substring(0, 50) + '...');
+                        }
+                    }
+                    
+                } catch (error) {
+                    log('❌ SW/Push Manager check failed: ' + error.message);
+                }
+                
+                // Now try Beams
+                try {
+                    await beamsClient.start();
+                    log('✅ beamsClient.start() resolved');
+                    
+                    // Check Beams internal state before setUserId
+                    try {
+                        const preDeviceId = await beamsClient.getDeviceId();
+                        log('🔍 Device ID before setUserId: ' + preDeviceId);
+                        
+                        const preRegState = await beamsClient.getRegistrationState();
+                        log('🔍 Registration state before setUserId: ' + preRegState);
+                    } catch (error) {
+                        log('⚠️ Could not get pre-setUserId state: ' + error.message);
+                    }
+                    
+                    // Set user ID with enhanced error handling
+                    try {
+                        log('🔑 Attempting setUserId with userId: ' + userId);
+                        const result = await beamsClient.setUserId(userId, tokenProvider);
+                        log('🔑 setUserId() result: ' + JSON.stringify(result));
+                        
+                        // Wait a moment and check again
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        const deviceId = await beamsClient.getDeviceId();
+                        log('🔑 Final deviceId: ' + deviceId);
+                        
+                        if (!deviceId) {
+                            // Try to get more info about why it's null
+                            const regState = await beamsClient.getRegistrationState();
+                            log('❌ Device ID is null! Registration state: ' + regState);
+                            
+                            // Check if there's an underlying push subscription
+                            const registration = await navigator.serviceWorker.ready;
+                            const pushSub = await registration.pushManager.getSubscription();
+                            log('🔍 Underlying push subscription exists: ' + !!pushSub);
+                            
+                            if (pushSub) {
+                                log('🔍 Push subscription endpoint: ' + pushSub.endpoint.substring(0, 50) + '...');
+                            }
+                            
+                            throw new Error('Device ID is null - registration failed');
+                        }
+                        
+                        const regState = await beamsClient.getRegistrationState();
+                        log('📋 Final registration state: ' + regState);
+                        
+                        // Try to get interests to confirm everything is working
+                        try {
+                            const interests = await beamsClient.getDeviceInterests();
+                            log('📋 Device interests: ' + JSON.stringify(interests));
+                        } catch (error) {
+                            log('⚠️ Could not get device interests: ' + error.message);
+                        }
+                        
+                        // Expose globally
+                        window.beamsClient = beamsClient;
+                        
+                        return true;
+                    } catch (setUserError) {
+                        log('❌ setUserId() ERROR: ' + setUserError.message);
+                        log('❌ setUserId() ERROR stack: ' + setUserError.stack);
+                        throw setUserError;
+                    }
+                    
+                } catch (startError) {
+                    log('❌ beamsClient.start() ERROR: ' + startError.message);
+                    log('❌ beamsClient.start() ERROR stack: ' + startError.stack);
+                    throw startError;
+                }
+            }
+
+            // Run iOS checks
+            checkIOSSpecificIssues();
+
+            // Service Worker Registration
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/service-worker.js')
                 .then(reg => {
@@ -98,6 +314,7 @@
                 });
             }
 
+            // Main DOMContentLoaded listener
             document.addEventListener('DOMContentLoaded', async () => {
                 const currentUserId = "{{ request.user.id }}";
                 log('👤 currentUserId = ' + currentUserId);
@@ -146,6 +363,40 @@
                 const perm = Notification.permission;
                 log('🔐 Notification.permission = ' + perm);
                 
+                // Enhanced permission and capability check
+                if (perm === 'granted') {
+                    log('🔐 Permission granted - running additional checks...');
+                    
+                    // Check if notifications actually work
+                    try {
+                        const testNotification = new Notification('Test', {
+                            body: 'Testing if notifications work',
+                            tag: 'test',
+                            silent: true
+                        });
+                        log('✅ Test notification created successfully');
+                        setTimeout(() => testNotification.close(), 1000);
+                    } catch (notifError) {
+                        log('❌ Test notification failed: ' + notifError.message);
+                    }
+                    
+                    // Check service worker controller
+                    if (!navigator.serviceWorker.controller) {
+                        log('⚠️ No service worker controller - this may cause issues');
+                    } else {
+                        log('✅ Service worker controller present');
+                    }
+                    
+                    // Check if we're in the right context
+                    const isSecure = location.protocol === 'https:' || location.hostname === 'localhost';
+                    log('🔒 Secure context: ' + isSecure);
+                    
+                    if (!isSecure) {
+                        log('❌ Not in secure context - push notifications require HTTPS');
+                        return;
+                    }
+                }
+                
                 // Initialize Beams
                 const beamsClient = new PusherPushNotifications.Client({
                     instanceId: '8d02d63d-a0b7-4438-99f6-20118fe15ab1',
@@ -153,12 +404,23 @@
                 });
 
                 const tokenProvider = new PusherPushNotifications.TokenProvider({
-                    url: '/users/api/beams-auth/'
+                    url: '/users/api/beams-auth/',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
                 });
 
                 // Auto-start if already granted
                 if (perm === 'granted') {
                     log('🚀 Auto-starting Beams (already granted)');
+                    
+                    // Test basic push first
+                    const basicPushWorks = await testBasicPushSubscription();
+                    if (!basicPushWorks) {
+                        log('❌ Basic push doesn\'t work - Beams will likely fail');
+                        return;
+                    }
+                    
                     try {
                         await startBeams(beamsClient, currentUserId, tokenProvider);
                     } catch (error) {
@@ -181,6 +443,13 @@
                             
                             if (permission !== 'granted') {
                                 log('❌ Permission denied');
+                                return;
+                            }
+
+                            // Test basic push first
+                            const basicPushWorks = await testBasicPushSubscription();
+                            if (!basicPushWorks) {
+                                log('❌ Basic push doesn\'t work - Beams will likely fail');
                                 return;
                             }
 
@@ -207,35 +476,6 @@
                     }
                 }
             });
-
-            async function startBeams(beamsClient, userId, tokenProvider) {
-                log('🚀 Starting Beams...');
-                
-                await beamsClient.start();
-                log('✅ beamsClient.start() resolved');
-                
-                // Set user ID
-                try {
-                    await beamsClient.setUserId(userId, tokenProvider);
-                    const deviceId = await beamsClient.getDeviceId();
-                    log('🔑 setUserId() succeeded; deviceId=' + deviceId);
-                    
-                    if (!deviceId) {
-                        throw new Error('Device ID is null - registration failed');
-                    }
-                    
-                    const regState = await beamsClient.getRegistrationState();
-                    log('📋 Registration state: ' + regState);
-                    
-                    // Expose globally
-                    window.beamsClient = beamsClient;
-                    
-                    return true;
-                } catch (error) {
-                    log('❌ setUserId() ERROR: ' + error.message);
-                    throw error;
-                }
-            }
         </script>
     </body>
 </html>
