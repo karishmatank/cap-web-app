@@ -25,6 +25,7 @@
     </head>
     <body>
         {% include 'partials/navbar.html' %}
+        <button id="enable-push" style="display: none;">🔔 Enable Notifications</button>
         {% block body %}
         {% endblock %}
         <script>
@@ -39,6 +40,8 @@
                 // Wait until the service worker is active
                 const registration = await navigator.serviceWorker.ready;
                 const currentUserId = "{{ request.user.id }}";
+                const perm = Notification.permission;
+                const shouldAsk = perm !== 'granted';
 
                 // Initialize Beams for push notifications
                 const beamsClient = new PusherPushNotifications.Client({
@@ -51,16 +54,45 @@
                 });
 
                 // Start the client
-                try {
-                    await beamsClient.start();
-                    await beamsClient.setUserId(currentUserId, tokenProvider);
+                if (perm === 'granted') {
+                    try {
+                        await beamsClient.start();
+                        await beamsClient.setUserId(currentUserId, tokenProvider);
 
-                    // Expose it globally
-                    window.beamsClient = beamsClient;
+                        // Expose it globally
+                        window.beamsClient = beamsClient;
 
-                    console.log('Beams started with existing SW!');
-                } catch (error) {
-                    console.error('Beams failed to start: ', error);
+                        console.log('Beams started with existing SW!');
+                    } catch (error) {
+                        console.error('Beams failed to start: ', error);
+                    }
+                }
+
+                if (shouldAsk) {
+                    const btn = document.getElementById('enable-push');
+                    if (btn) {
+                        btn.style.display = 'inline-block';
+                        btn.addEventListener('click', async () => {
+                            const permission = await Notification.requestPermission();
+
+                            if (permission !== 'granted') {
+                                return;
+                            }
+
+                            try {
+                                await beamsClient.start();
+                                await beamsClient.setUserId(currentUserId, tokenProvider);
+
+                                // Expose it globally
+                                window.beamsClient = beamsClient;
+
+                                console.log('Beams started on click with existing SW!');
+                                btn.style.display = 'none';
+                            } catch (error) {
+                                console.error('Beams failed to start on click: ', error);
+                            }
+                        });
+                    }
                 }
             });
         </script>
