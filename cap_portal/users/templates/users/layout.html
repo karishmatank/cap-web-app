@@ -61,6 +61,7 @@
             log('display-mode standalone?: ' +
                 window.matchMedia('(display-mode: standalone)').matches);
             log('serviceWorker supported?: ' + ('serviceWorker' in navigator));
+            log('SW controlling page?: ' + !!navigator.serviceWorker.controller);
             log('Notification API available?: ' + ('Notification' in window));
             if ('Notification' in window) {
                 log('Notification.permission: ' + Notification.permission);
@@ -76,10 +77,21 @@
                 navigator.serviceWorker.register('/service-worker.js')
                 .then(reg => {
                     log('✅ SW registered, scope=' + reg.scope);
+                    if (reg.active) {
+                        log('   → active scriptURL: ' + reg.active.scriptURL);
+                    }
                     return navigator.serviceWorker.ready;
                 })
                 .then(reg => {
                     log('✅ SW ready, active script=' + reg.active.scriptURL);
+                    log('🔑 SW ready, controller now present? ' + !!navigator.serviceWorker.controller);
+                    // fetch the SW text and show its first line
+                    return fetch('/service-worker.js')
+                    .then(r => r.text())
+                    .then(txt => {
+                        const first = txt.split('\n')[0];
+                        log('📄 SW first line: ' + first.trim());
+                    });
                 })
                 .catch(err => {
                     log('❌ SW registration/ready failed: ' + err);
@@ -114,6 +126,7 @@
                         await beamsClient.start();
                         log('✅ beamsClient.start() resolved');
                         await beamsClient.setUserId(currentUserId, tokenProvider);
+                        log('Printing beamsClient: ' + beamsClient);
                         log('✅ setUserId() resolved; deviceId=' + await beamsClient.getDeviceId());
 
                         // Expose it globally
