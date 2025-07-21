@@ -25,9 +25,9 @@ export default function PushInitializer() {
                             // Hide the bell after user is subscribed
                             return !OneSignal.User.PushSubscription.optedIn;
                         }
-                    },
-                    serviceWorkerPath: "/OneSignalSDKWorker.js",
-                    serviceWorkerParam: { scope: "/" }
+                    }
+                    // serviceWorkerPath: "/OneSignalSDKWorker.js",
+                    // serviceWorkerParam: { scope: "/" }
                 });
                 window.__oneSignalInit = true;
                 console.log("OneSignal started, chat frontend");
