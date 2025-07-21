@@ -23,7 +23,7 @@ def push_to_users(user_ids: list[str], title: str, body: str, url: str):
     }
 
     headers = {
-        "Authorization": ONESIGNAL_API_KEY,
+        "Authorization": f"Key {ONESIGNAL_API_KEY}",
         "Content-Type": "application/json"
     }
 
