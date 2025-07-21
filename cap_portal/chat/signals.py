@@ -19,7 +19,6 @@ def push_new_message(sender, instance, created, **kwargs):
     sender_id = instance.user.id
 
     room = instance.room_name
-    room_id = instance.id
 
     # Build list of recipient names
     recipient_ids = list(room.members.exclude(id=sender_id).values_list('id', flat=True))
@@ -29,10 +28,10 @@ def push_new_message(sender, instance, created, **kwargs):
     # Push notification
     try:
         push_to_users(
-            user_ids=[str(i) for i in recipient_ids], 
+            user_ids=[str(i) for i in recipient_ids],
             title=f"New message in {room.name}", 
             body=instance.text[:30],
-            url=f"https://apex-cap.onrender.com/chat/{room_id}/"
+            url=f"https://apex-cap.onrender.com/chat/{room.id}/"
         )
     except HTTPError as err:
         logger.warning("OneSignal push failed for chat event update: %s", err)
