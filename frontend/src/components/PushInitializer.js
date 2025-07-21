@@ -26,7 +26,7 @@ export default function PushInitializer() {
                             return !OneSignal.User.PushSubscription.optedIn;
                         }
                     },
-                    serviceWorkerPath: "/service-worker.js",
+                    serviceWorkerPath: "/OneSignalSDKWorker.js",
                     serviceWorkerParam: { scope: "/" }
                 });
                 window.__oneSignalInit = true;
