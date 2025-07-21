@@ -209,9 +209,9 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY")
 VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY")
 
-# Pusher Beams keys
-BEAMS_INSTANCE_ID=env("BEAMS_INSTANCE_ID")
-BEAMS_SECRET_KEY=env("BEAMS_SECRET_KEY")
+# OneSignal keys
+ONESIGNAL_APP_ID=env("ONESIGNAL_APP_ID")
+ONESIGNAL_API_KEY=env("ONESIGNAL_API_KEY")
 
 # Extend session settings to avoid users being auto logged out unless they explicitly click "Log Out"
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False

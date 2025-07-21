@@ -8,11 +8,14 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from requests.exceptions import HTTPError
 from tasks.models import ToDo, Application
 from users.models import UserProfile
 from datetime import datetime
-from cap_portal.beams import beams_client
+from cap_portal.notifications import push_to_users
+import logging
 
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 def unpack_participants(submitted_participants):
@@ -132,17 +135,16 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
 
         # Push notification logic
         recipient_ids = [str(user.id) for user in final_participants if user.id != request.user.id]
-        beams_client.publish_to_users(
-            user_ids=recipient_ids,
-            publish_body={
-                'web': {
-                    'notification': {
-                        'title': f"New event: {event.name}",
-                        'body': event.start.strftime("%B %d at %I:%M %p"),
-                    }
-                }
-            },
-        )
+
+        try:
+            push_to_users(
+                user_ids=recipient_ids, 
+                title=f"New event: {event.name}", 
+                body=event.start.strftime("%B %d at %I:%M %p"),
+                url="https://apex-cap.onrender.com/calendar/"
+            )
+        except HTTPError as err:
+            logger.warning("OneSignal push failed for calendar event create: %s", err)
 
         # Return the newly created event
         output_serializer = self.get_serializer(event)
@@ -204,20 +206,18 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
         else:
             recipient_ids = []
         
-        recipient_ids = [i for i in recipient_ids if i != self.request.user.id]
+        recipient_ids = [str(i) for i in recipient_ids if i != self.request.user.id]
 
         if recipient_ids:
-            beams_client.publish_to_users(
-                user_ids=[str(i) for i in recipient_ids],
-                publish_body={
-                    'web': {
-                        'notification': {
-                            'title': f"Updated event: {event.name}",
-                            'body': event.start.strftime("%B %d at %I:%M %p"),
-                        }
-                    }
-                },
-            )
+            try:
+                push_to_users(
+                    user_ids=recipient_ids, 
+                    title=f"Updated event: {event.name}", 
+                    body=event.start.strftime("%B %d at %I:%M %p"),
+                    url="https://apex-cap.onrender.com/calendar/"
+                )
+            except HTTPError as err:
+                logger.warning("OneSignal push failed for calendar event update: %s", err)
 
         # Return the newly created event
         output_serializer = self.get_serializer(event)

@@ -49,20 +49,27 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const logoutBtn = document.getElementById('logout-btn');
-        if (!logoutBtn) return;
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(function (OneSignal) {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (!logoutBtn) return;
 
-        logoutBtn.addEventListener('click', (event) => {
-            // Prevent normal form submit
-            event.preventDefault();
+            logoutBtn.addEventListener('click', async (event) => {
+                // Prevent normal form submit
+                event.preventDefault();
 
-            // Tear down Beams client
-            if (window.beamsClient) {
-                window.beamsClient.stop().catch(console.error);
-            }
+                // OneSignal logout
+                try {
+                    await OneSignal.logout();
+                }
+                catch (err) {
+                    console.error('OneSignal logout failed from navbar.html', err);
+                }
 
-            // Proceed
-            document.getElementById('logout-form').submit();
+                // Proceed
+                document.getElementById('logout-form').submit();
+            });
         });
+        
     });
 </script>

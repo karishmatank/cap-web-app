@@ -2,6 +2,7 @@ import { useEffect, useState, React, useRef } from 'react';
 import axios from "../utils/axios";
 // import { Link } from 'react-router-dom';
 import Collapse from 'bootstrap/js/dist/collapse';
+import OneSignal from 'react-onesignal';
 
 function Navbar () {
     // Get links for desktop navbar
@@ -28,18 +29,19 @@ function Navbar () {
 
     // Handle post request for logout
     const handleLogout = () => {
-        const beamsClient = window.beamsClient;
-        if (beamsClient) {
-            beamsClient.stop().then("Beams client stopped successfully").catch(console.error);
-        }
-        
-        axios.post("/logout/")
-        .then(() => {
-            window.location.href = '/login/'
-        })
-        .catch((error) => {
-            console.log("Error logging out", error);
+        OneSignal.logout()
+        .then(() => console.log('OneSignal logout successful from community frontend navbar'))
+        .catch(err => console.error('OneSignal logout failed from community frontend navbar', err))
+        .finally(() => {
+            axios.post("/logout/")
+            .then(() => {
+                window.location.href = '/login/'
+            })
+            .catch((error) => {
+                console.log("Error logging out", error);
+            });
         });
+        
     }
 
     const toggleNavbar = () => {

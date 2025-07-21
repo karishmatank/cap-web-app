@@ -18,7 +18,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from datetime import datetime
-from cap_portal.beams import beams_client
 
 # Create your views here.
 class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
@@ -254,10 +253,3 @@ class CommunityDirectoryListView(generics.ListAPIView):
             queryset = queryset.filter(role=role)
         
         return queryset
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def beams_auth(request):
-    user = request.user
-    token = beams_client.generate_token(str(user.id))
-    return JsonResponse(token)

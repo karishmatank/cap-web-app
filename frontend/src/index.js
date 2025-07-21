@@ -15,15 +15,15 @@ root.render(
   </React.StrictMode>
 );
 
-// Register SW
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js', { scope: '/' })
-      .then(reg => console.log('SW registered: ', reg.scope))
-      .catch(err => console.error('SW registration failed: ', err));
-  });
-}
+// // Register SW
+// if ('serviceWorker' in navigator) {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker
+//       .register('/service-worker.js', { scope: '/' })
+//       .then(reg => console.log('SW registered: ', reg.scope))
+//       .catch(err => console.error('SW registration failed: ', err));
+//   });
+// }
 
 // if ('serviceWorker' in navigator && 'PushManager' in window) {
 //   navigator.serviceWorker.ready.then(swReg => {

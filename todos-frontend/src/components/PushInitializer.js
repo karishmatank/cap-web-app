@@ -1,41 +1,46 @@
-import * as PusherPushNotifications from '@pusher/push-notifications-web';
+import OneSignal from 'react-onesignal';
 import useCurrentUser from '../hooks/useCurrentUser';
 import { useEffect } from "react";
 
 
 
 export default function PushInitializer() {
-    /* Pusher Beams initialization to get push notifications working */
+    /* OneSignal initialization to get push notifications working */
 
     const { currentUser } = useCurrentUser();
 
     useEffect(() => {
-        async function initBeams() {
-            if (!currentUser) return;
+        async function initOneSignal() {
+            if (!window.__oneSignalInit) {
+                await OneSignal.init({
+                    appId: "dce8adf1-552d-4b68-ae13-0ee2688ee21d",
+                    // safari_web_id: "web.onesignal.auto.253751a8-ac24-4181-97da-883dbdadac49",
+                    notifyButton: {
+                        enable: true,
+                        size: 'medium',
+                        position: 'bottom-left',
+                        offset: { bottom: '50px', left: '10px' },
+                        showCredit: false,
+                        displayPredicate: async () => {
+                            // Hide the bell after user is subscribed
+                            return !OneSignal.User.PushSubscription.optedIn;
+                        }
+                    },
+                    serviceWorkerPath: "/service-worker.js",
+                    serviceWorkerParam: { scope: "/" }
+                });
+                window.__oneSignalInit = true;
+                console.log("OneSignal started, todos frontend");
+            }
 
-            // Wait for the service worker
-            const serviceWorkerRegistration = await window.navigator.serviceWorker.ready;
+            if (currentUser) {
+                await OneSignal.login(currentUser.id);
+                console.log("User logged in, todos frontend");
+            }
 
-            // Initialize Beams
-            const beamsClient = new PusherPushNotifications.Client({
-                instanceId: '8d02d63d-a0b7-4438-99f6-20118fe15ab1',
-                serviceWorkerRegistration: serviceWorkerRegistration,
-            });
-            
-            const tokenProvider = new PusherPushNotifications.TokenProvider({
-                url: '/users/api/beams-auth/'
-            });
-
-            await beamsClient.start();
-            await beamsClient.setUserId(currentUser.id, tokenProvider);
-
-            // expose it globally for everyone
-            window.beamsClient = beamsClient;
-
-            console.log('Beams started with existing SW!');
         }
 
-        initBeams().catch(console.error);
+        initOneSignal().catch(console.error);
 
     }, [currentUser]);
 

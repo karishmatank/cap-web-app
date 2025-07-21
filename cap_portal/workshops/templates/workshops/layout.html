@@ -21,48 +21,41 @@
         <link rel="manifest" href="{% static 'manifest.json' %}" />
         <meta name="theme-color" content="#ffffff" />
 
-        <script src="https://js.pusher.com/beams/1.0/push-notifications-cdn.js"></script>
+        <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+        <script>
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function(OneSignal) {
+                // Create a custom flag to avoid calling init if it was already called
+                if (window.__oneSignalInit) return;
+
+                await OneSignal.init({
+                    appId: "dce8adf1-552d-4b68-ae13-0ee2688ee21d",
+                    // safari_web_id: "web.onesignal.auto.253751a8-ac24-4181-97da-883dbdadac49",
+                    notifyButton: {
+                        enable: true,
+                        size: 'medium',
+                        position: 'bottom-left',
+                        offset: { bottom: '50px', left: '10px' },
+                        showCredit: false,
+                        displayPredicate: async () => {
+                            // Hide the bell after user is subscribed
+                            return !OneSignal.User.PushSubscription.optedIn;
+                        }
+                    },
+                    serviceWorkerPath: "/service-worker.js",
+                    serviceWorkerParam: { scope: "/" }
+                });
+
+                window.__oneSignalInit = true;
+
+                await OneSignal.login("{{ user.id|escapejs }}");
+                
+            });
+        </script>
     </head>
     <body>
         {% include 'partials/navbar.html' %}
         {% block body %}
         {% endblock %}
-        <script>
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker
-                    .register('/service-worker.js')
-                    .then(reg => console.log('SW registered: ', reg.scope))
-                    .catch(err => console.error('SW registration failed: ', err));
-            }
-
-            document.addEventListener('DOMContentLoaded', async () => {
-                // Wait until the service worker is active
-                const registration = await navigator.serviceWorker.ready;
-                const currentUserId = "{{ request.user.id }}";
-
-                // Initialize Beams for push notifications
-                const beamsClient = new PusherPushNotifications.Client({
-                    instanceId: '8d02d63d-a0b7-4438-99f6-20118fe15ab1',
-                    serviceWorkerRegistration: registration,
-                });
-
-                const tokenProvider = new PusherPushNotifications.TokenProvider({
-                    url: '/users/api/beams-auth/'
-                });
-
-                // Start the client
-                try {
-                    await beamsClient.start();
-                    await beamsClient.setUserId(currentUserId, tokenProvider);
-
-                    // Expose it globally
-                    window.beamsClient = beamsClient;
-
-                    console.log('Beams started with existing SW!');
-                } catch (error) {
-                    console.error('Beams failed to start: ', error);
-                }
-            });
-        </script>
     </body>
 </html>
