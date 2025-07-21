@@ -4,10 +4,12 @@ import requests
 
 ONESIGNAL_APP_ID = settings.ONESIGNAL_APP_ID
 ONESIGNAL_API_KEY = settings.ONESIGNAL_API_KEY
-ONESIGNAL_ENDPOINT = 'https://api.onesignal.com/notifications?c=push'
+ONESIGNAL_ENDPOINT = 'https://api.onesignal.com/notifications'
 
 def push_to_users(user_ids: list[str], title: str, body: str, url: str):
     """Send a push notification to specified user_ids"""
+
+    querystring = {"c":"push"}
 
     payload = {
         "app_id": ONESIGNAL_APP_ID,
@@ -25,6 +27,6 @@ def push_to_users(user_ids: list[str], title: str, body: str, url: str):
         "Content-Type": "application/json"
     }
 
-    response = requests.post(ONESIGNAL_ENDPOINT, headers=headers, json=payload)
+    response = requests.request("POST", ONESIGNAL_ENDPOINT, headers=headers, json=payload, params=querystring)
     response.raise_for_status()
     return response.json()

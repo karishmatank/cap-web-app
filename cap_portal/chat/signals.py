@@ -35,4 +35,4 @@ def push_new_message(sender, instance, created, **kwargs):
             url=f"https://apex-cap.onrender.com/chat/{room_id}/"
         )
     except HTTPError as err:
-        logger.warning("OneSignal push failed for calendar event update: %s", err)
+        logger.warning("OneSignal push failed for chat event update: %s", err)
