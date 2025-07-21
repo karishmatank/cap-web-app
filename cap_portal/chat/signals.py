@@ -29,7 +29,7 @@ def push_new_message(sender, instance, created, **kwargs):
     # Push notification
     try:
         push_to_users(
-            user_ids=recipient_ids, 
+            user_ids=[str(i) for i in recipient_ids], 
             title=f"New message in {room.name}", 
             body=instance.text[:30],
             url=f"https://apex-cap.onrender.com/chat/{room_id}/"
