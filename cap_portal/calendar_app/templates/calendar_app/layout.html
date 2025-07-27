@@ -56,7 +56,18 @@
 
                 window.__oneSignalInit = true;
 
-                await OneSignal.login("{{ user.id|escapejs }}");
+                const userId = "{{ user.id|escapejs }}"
+
+                if (OneSignal.Notifications.permission) {
+                    await OneSignal.login(userId);
+                } else {
+                    /* If permission was not granted yet, wait for user to grant permission */
+                    OneSignal.Notifications.addEventListener("permissionChange", async (permission) => {
+                        if (permission) {
+                            await OneSignal.login(userId);
+                        }
+                    });
+                }
                 
             });
         </script>

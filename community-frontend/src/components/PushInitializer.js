@@ -34,8 +34,19 @@ export default function PushInitializer() {
             }
 
             if (currentUser) {
-                await OneSignal.login(currentUser.id);
-                console.log("User logged in, community frontend");
+
+                if (OneSignal.Notifications.permission) {
+                    await OneSignal.login(currentUser.id);
+                    console.log("User logged in, community frontend");
+                    return;
+                }
+
+                OneSignal.Notifications.addEventListener("permissionChange", async (permission) => {
+                    if (permission) {
+                        await OneSignal.login(currentUser.id);
+                    }
+                });
+                
             }
 
         }
