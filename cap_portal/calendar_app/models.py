@@ -20,3 +20,10 @@ class CalendarEvent(models.Model):
     
     def __str__(self):
         return f"{self.name} ({self.start})"
+
+class CalendarEventNotification(models.Model):
+    calendar_event = models.OneToOneField(CalendarEvent, on_delete=models.CASCADE, related_name="reminder_event")
+    onesignal_notif_id = models.CharField(max_length=80, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.calendar_event} - {self.onesignal_notif_id}"

@@ -38,6 +38,7 @@ pyasn1_modules==0.4.1
 pycparser==2.22
 PyJWT==2.10.1
 pyOpenSSL==25.0.0
+python-dateutil==2.9.0.post0
 pywebpush==2.0.3
 redis==5.2.1
 requests==2.32.3

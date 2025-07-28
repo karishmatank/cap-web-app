@@ -1,7 +1,8 @@
-from .models import CalendarEvent, CATEGORY_CHOICES
+from .models import CalendarEvent, CalendarEventNotification, CATEGORY_CHOICES
 from .serializers import CalendarEventReadSerializer, CalendarEventWriteSerializer
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, status
@@ -12,7 +13,7 @@ from requests.exceptions import HTTPError
 from tasks.models import ToDo, Application
 from users.models import UserProfile
 from datetime import datetime
-from cap_portal.notifications import push_to_users
+from cap_portal.notifications import push_to_users, schedule_event_reminder, delete_event_reminder
 import logging
 
 logger = logging.getLogger(__name__)
@@ -105,6 +106,7 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
 
         return Response(calendar_items)
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         # Intercept the create functionality as we added some custom lists that we need to expand into participants
 
@@ -146,11 +148,22 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
         except HTTPError as err:
             logger.warning("OneSignal push failed for calendar event create: %s", err)
 
+        # Reminder notification for 15 min before event
+        reminder_notif_id = schedule_event_reminder(
+            event=event, 
+            user_ids=[str(user.id) for user in event.participants.all()]
+        )
+
+        CalendarEventNotification.objects.create(
+            calendar_event=event,
+            onesignal_notif_id=reminder_notif_id
+        )
+
         # Return the newly created event
         output_serializer = self.get_serializer(event)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED)
     
-
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         # Boolean flag that tells DRF whether to require every field or not (True = PATCH, False = PUT)
         partial = kwargs.pop('partial', False)
@@ -218,11 +231,35 @@ class CalendarEventViewSet(viewsets.ModelViewSet):
                 )
             except HTTPError as err:
                 logger.warning("OneSignal push failed for calendar event update: %s", err)
+        
+        # If the start time of the event changed, update the scheduled reminder notification
+        reminder_notif_event = getattr(event, "reminder_event", None)
+
+        if "start" in serializer.validated_data and reminder_notif_event:
+            delete_event_reminder(event_id=reminder_notif_event.onesignal_notif_id)
+            reminder_notif_id = schedule_event_reminder(
+                event=event, 
+                user_ids=[str(user.id) for user in event.participants.all()]
+            )
+            reminder_notif_event.onesignal_notif_id = reminder_notif_id
+            reminder_notif_event.save(update_fields=["onesignal_notif_id"])
 
         # Return the newly created event
         output_serializer = self.get_serializer(event)
         return Response(output_serializer.data, status=status.HTTP_200_OK)
 
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        # Delete the OneSignal reminder notification
+        reminder_notif_event = getattr(instance, "reminder_event", None)
+        if reminder_notif_event:
+            try:
+                delete_event_reminder(event_id=reminder_notif_event.onesignal_notif_id)
+            except HTTPError as err:
+                logger.warning("OneSignal cancel failed: %s", err)
+
+        # Delete the event itself
+        instance.delete()
 
 @login_required
 def calendar_view(request):
