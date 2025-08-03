@@ -1,4 +1,4 @@
-.custom-select {
+/* .custom-select {
     padding-top: 0.625rem;
     min-height: calc(2.5rem + calc(var(--bs-border-width)* 2));
 }
@@ -9,4 +9,21 @@
 
 .form-signin input#password {
     margin-bottom: 0px;
+} */
+
+.tile-box {
+    background-color: #f6f6f6;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+    box-shadow: inset 0 0 0 1px #e0e0e0;
+}
+
+.tile-link {
+    color: inherit;
+}
+
+.tile-link:hover .tile-box,
+.tile-link:focus-visible .tile-box {
+    background-color: #eaeaea;
+    transform: translateY(2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
 }
