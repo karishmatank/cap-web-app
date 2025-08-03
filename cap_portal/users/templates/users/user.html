@@ -1,16 +1,63 @@
 {% extends "users/layout.html" %}
 
 {% block body %}
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="container py-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <h1>Welcome, {{ request.user.first_name }}!</h1>
+
+        <div class="container text-center mb-2">
+            <div class="row g-4">
+                <div class="col-12 col-lg-6">
+                    <a href="/messages/" class="tile-link text-decoration-none">
+                        <div class="tile-box p-4 h-100 rounded-3 d-flex flex-column justify-content-center">
+                            <h3 class="h5 fw-semibold mb-2">Chat</h3>
+                            <p class="'mb-0 text-body-secondary">Message anyone in the CAP community</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <a href="/directory/" class="tile-link text-decoration-none">
+                        <div class="tile-box p-4 h-100 rounded-3 d-flex flex-column justify-content-center">
+                            <h3 class="h5 fw-semibold mb-2">CAP Directory</h3>
+                            <p class="'mb-0 text-body-secondary">View mentor, mentee, and admin profiles</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <a href="/workshops/" class="tile-link text-decoration-none">
+                        <div class="tile-box p-4 h-100 rounded-3 d-flex flex-column justify-content-center">
+                            <h3 class="h5 fw-semibold mb-2">Workshop Materials</h3>
+                            <p class="'mb-0 text-body-secondary">Access session workbooks</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <a href="/applications/" class="tile-link text-decoration-none">
+                        <div class="tile-box p-4 h-100 rounded-3 d-flex flex-column justify-content-center">
+                            <h3 class="h5 fw-semibold mb-2">Applications</h3>
+                            <p class="'mb-0 text-body-secondary">Track college, financial aid, and related applications</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <a href="/calendar/" class="tile-link text-decoration-none">
+                        <div class="tile-box p-4 h-100 rounded-3 d-flex flex-column justify-content-center">
+                            <h3 class="h5 fw-semibold mb-2">Calendar</h3>
+                            <p class="'mb-0 text-body-secondary">Events & reminders</p>
+                        </div>
+                    </a>
+                </div>       
             </div>
-        {% endfor %}
-    {% endif %}
+        </div>
 
-    <h1>Welcome, {{ request.user.first_name }}!</h1>
-
-    <a href="{% url 'users:change_password' %}">Change Password</a>
+        <a href="{% url 'users:change_password' %}">Change Password</a>
+    </div>
 {% endblock %}
