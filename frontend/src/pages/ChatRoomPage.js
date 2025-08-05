@@ -114,6 +114,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
             {
                 root: chatLogRef.current, // Where to look
                 threshold: 0.0, // I want the element to be entirely unvisible to trigger this
+                rootMargin: '0px 0px 80px 0px' // Treat 80px above the real bottom edge as the edge to avoid iOS issues
             }
         );
 
