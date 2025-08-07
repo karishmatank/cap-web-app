@@ -18,6 +18,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
     const hasScrolledOnLoad = useRef(false);
     const [showPicker, setShowPicker] = useState(false);
     const emojiPickerRef = useRef(null);
+    const lastFetchRef = useRef(0);
 
     /* Reset message history upon roomId refresh */
     useEffect(() => {
@@ -150,9 +151,10 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
     useEffect(() => {
         const chatLog = chatLogRef.current;
         if (!chatLog) return;
+        if ((Date.now() - lastFetchRef.current) < 150) return;  // Prevent it from firing too quickly
 
         const handleScroll = () => {
-            if (chatLog.scrollTop < 50 && hasMore && !loadingOlderRef.current && messages.length > 0) {
+            if (chatLog.scrollTop > 0 && chatLog.scrollTop < 50 && hasMore && !loadingOlderRef.current && messages.length > 0) {
                 // Get timestamp of oldest message
                 const oldestMessage = messages[0];
                 const before = oldestMessage?.timestamp;
@@ -162,6 +164,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
 
                 if (loadingOlderRef.current) return;
                 loadingOlderRef.current = true;
+                lastFetchRef.current = Date.now();
 
                 // Get older messages
                 axios.get(`/chat/api/chats/${roomId}/messages/`, {
@@ -177,11 +180,13 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                     setHasMore(response.data.has_more);
                 })
                 .finally(() => {
-                    loadingOlderRef.current = false;
                     // Maintain scroll position after loading older messages
-                    setTimeout(() => {
+                    // Runs after DOM has actuallly added the older messages
+                    requestAnimationFrame(() => {
                         chatLog.scrollTop = chatLog.scrollHeight - previousScrollHeight;
-                    }, 0);
+                    });
+
+                    loadingOlderRef.current = false;
                 });
             }
         };
