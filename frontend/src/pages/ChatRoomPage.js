@@ -183,7 +183,7 @@ function ChatRoomPage({ currentUser, refreshRooms }) {
                     // Maintain scroll position after loading older messages
                     // Runs after DOM has actuallly added the older messages
                     requestAnimationFrame(() => {
-                        chatLog.scrollTop = chatLog.scrollHeight - previousScrollHeight;
+                        chatLog.scrollTop = chatLog.scrollHeight - previousScrollHeight + chatLog.scrollTop;
                     });
 
                     loadingOlderRef.current = false;
