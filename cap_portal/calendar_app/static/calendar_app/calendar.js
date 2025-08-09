@@ -136,9 +136,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Prefill form fields
         document.getElementById('event-date').value = startDateStr;
-        document.getElementById('all-day-checkbox').checked = isAllDay;
+        document.getElementById('all-day-checkbox').checked = false;
 
-        if (!isAllDay) {
+        if (document.getElementById('all-day-checkbox').checked === false) {
             document.getElementById('event-start-time').value = startTimeStr;
             document.getElementById('event-end').value = endDateStr;
             document.getElementById('event-end-time').value = endTimeStr;
@@ -243,6 +243,12 @@ document.addEventListener("DOMContentLoaded", () => {
             startISO = changes.start ? ensureOffset(changes.start.toDate().toLocaleDateString('en-CA')) : null;
             endISO = null;
         }
+
+        // Check to make sure end is > start
+        if (end && (end < start)) {
+            document.getElementById('error-message').innerText = 'End must be after start!';
+            return false;
+        }
         
         // Get updates
         const body = {};
@@ -293,6 +299,12 @@ document.getElementById("add-event-form").addEventListener("submit", (event) => 
     // If time provided, combine with date
     const start = time ? ensureOffset(`${date}T${time}`) : ensureOffset(date);
     const end = !isAllDay && endDate ? (endTime ? ensureOffset(`${endDate}T${endTime}`): ensureOffset(endDate)) : null;
+
+    // Check to make sure end is > start
+    if (end && (end < start)) {
+        document.getElementById('error-message').innerText = 'End must be after start!';
+        return false;
+    }
 
     const participants = inviteOthers && participantsSelect
         ? Array.from(participantsSelect.selectedOptions).map(opt => parseInt(opt.value))
@@ -486,6 +498,7 @@ document.getElementById("addEventModal").addEventListener("hidden.bs.modal", () 
     document.getElementById('addEventModalLabel').innerText = "Add New Event";
     document.getElementById('event-submit-button').innerText = "Add Event";
     document.getElementById('readonly-message').innerText = '';
+    document.getElementById('error-message').innerText = '';
     document.getElementById('participants-group').style.display = "none";
     document.getElementById('end-date-group').style.display = "block";
 

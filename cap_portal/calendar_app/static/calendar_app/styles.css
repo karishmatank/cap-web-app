@@ -39,6 +39,11 @@ h2 {
     color: #ff4545;
 }
 
+#error-message {
+    font-weight: bold;
+    color: #ff4545;
+}
+
 @media (max-width: 600px) {
     html {
         font-size: 80%;

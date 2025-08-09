@@ -36,6 +36,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3" id="readonly-message"></div>
+                        <div class="mb-3" id="error-message"></div>
                         <div class="mb-3">
                             <label for="event-category" class="form-label">Category</label>
                             <select id="event-category" name="category" class="form-select">
@@ -69,16 +70,16 @@
 
                         <div id="end-date-group" style="display: block;">
                             <div class="mb-3">
-                                <label for="event-start-time" class="form-label">Start Time (optional)</label>
-                                <input type="time" class="form-control" id="event-start-time" name="start-time">
+                                <label for="event-start-time" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="event-start-time" name="start-time" step="60">
                             </div>
                             <div class="mb-3">
                                 <label for="event-end" class="form-label">End Date</label>
                                 <input type="date" class="form-control" id="event-end" name="end">
                             </div>
                             <div class="mb-3">
-                                <label for="event-end-time" class="form-label">End Time (optional)</label>
-                                <input type="time" class="form-control" id="event-end-time" name="end-time">
+                                <label for="event-end-time" class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="event-end-time" name="end-time" step="60">
                             </div>
                         </div>
 
@@ -104,4 +105,63 @@
     </div>
     <script>window.CSRF_TOKEN = "{{ csrf_token }}";</script>
     <script src="{% static 'calendar_app/calendar.js' %}"></script>
+    <script>
+        /* Min end date and start time based on start date entered */
+        const start_date = document.getElementById('event-date');
+        const start_time = document.getElementById('event-start-time');
+        const end_date = document.getElementById('event-end');
+        const end_time = document.getElementById('event-end-time');
+        const all_day = document.getElementById('all-day-checkbox');
+
+        // Block dates in the past
+        const pad = (n) => String(n).padStart(2, "0");
+
+        const now = new Date();
+        const today = now.toLocaleDateString('en-CA');
+        const hhmm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        start_date.min = today;
+
+        function syncLimits() {
+            if (all_day.checked) {
+                start_time.value = "";
+                end_time.value = "";
+                end_date.value = "";
+
+                start_time.removeAttribute('min');
+                end_time.removeAttribute('min');
+                end_date.removeAttribute('min');
+
+                return;
+            }
+            
+            if (start_date.value === today || start_date.value === "") {
+                start_time.min = hhmm;
+
+                if (start_time.value && start_time.value < hhmm) {
+                    start_time.value = hhmm;
+                }
+            } else {
+                start_time.removeAttribute('min');
+            }
+
+            end_date.min = start_date.value || today;
+            if (end_date.value === start_date.value) {
+                end_time.min = start_time.value || hhmm;
+
+                if (end_time.value && end_time.value < end_time.min) {
+                    end_time.value = end_time.min;
+                }
+            } else {
+                end_time.removeAttribute('min');
+            }
+            
+        }
+
+        // Keep limits in sync whenever the user changes a field
+        [start_date, start_time, end_date, end_time].forEach((el) => el.addEventListener("input", syncLimits));
+        all_day.addEventListener('change', syncLimits);
+
+        syncLimits();
+
+    </script>
 {% endblock %}
