@@ -12,6 +12,8 @@ class WorkshopMaterial(models.Model):
     description=models.TextField(blank=True)
     grade=models.IntegerField(choices=GRADE_CHOICES)
     google_doc_id=models.CharField(blank=True, null=True, max_length=1000)
+    google_slides_id=models.CharField(blank=True, null=True, max_length=1000)
+    google_sheets_id=models.CharField(blank=True, null=True, max_length=1000)
     visible=models.BooleanField(default=False)
 
     def __str__(self):

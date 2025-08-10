@@ -14,7 +14,7 @@
         {% endfor %}
     {% endif %}
 
-    <div class="container mt-5" style="max-width: 750px;">
+    <div class="container my-5" style="max-width: 750px;">
         <h1 class="mb-4">{{ form_title }}</h1>
         <form action="{{ form_action_url }}" method="post">
             {% csrf_token %}
@@ -71,7 +71,7 @@
                 </div>
             </div>
             <div class="mb-3">
-                <label for="new-workshop-google-doc-id" style="font-size: 14px; margin-left: 13px; color: grey;">Google Docs URL</label>
+                <label for="new-workshop-google-doc-id" style="font-size: 14px; margin-left: 13px; color: grey;">Google Docs URL, if Applicable</label>
                 <div class="input-group">
                     <span class="input-group-text" id="google-docs-link-format">https://docs.google.com/document/d/</span>
                     <input 
@@ -82,6 +82,36 @@
                         value="{{ workshop.google_doc_id|default_if_none:'' }}"
                         autocomplete="off"
                         aria-describedby="google-docs-link-format"
+                    >
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="new-workshop-google-slides-id" style="font-size: 14px; margin-left: 13px; color: grey;">Google Slides URL, if Applicable</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="google-slides-link-format">https://docs.google.com/presentation/d/</span>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="new-workshop-google-slides-id"
+                        name="new-workshop-google-slides-id"
+                        value="{{ workshop.google_slides_id|default_if_none:'' }}"
+                        autocomplete="off"
+                        aria-describedby="google-slides-link-format"
+                    >
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="new-workshop-google-sheets-id" style="font-size: 14px; margin-left: 13px; color: grey;">Google Sheets URL, if Applicable</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="google-sheets-link-format">https://docs.google.com/spreadsheets/d/</span>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="new-workshop-google-sheets-id"
+                        name="new-workshop-google-sheets-id"
+                        value="{{ workshop.google_sheets_id|default_if_none:'' }}"
+                        autocomplete="off"
+                        aria-describedby="google-sheets-link-format"
                     >
                 </div>
             </div>

@@ -25,23 +25,61 @@
                         <p class="card-text mt-3">{{ workshop.description }}</p>
 
                         <!--Make a copy button-->
-                        <a
-                            href="https://docs.google.com/document/d/{{ workshop.google_doc_id }}/copy"
-                            target="_blank"
-                            class="btn btn-outline-primary"
-                        >
-                            Make a Copy
-                        </a>
+                        <div class="row">
+                            {% if workshop.google_doc_id %}
+                                <a
+                                    href="https://docs.google.com/document/d/{{ workshop.google_doc_id }}/copy"
+                                    target="_blank"
+                                    class="btn btn-outline-primary"
+                                >
+                                    Make a Copy - Google Doc
+                                </a>
+                            {% endif %}
 
-                        <!--Embedded Google Doc-->
-                        <div class="ratio ratio-4x3 mb-3" style="min-height: 400px;">
-                            <iframe
-                                src="https://docs.google.com/document/d/{{ workshop.google_doc_id }}/preview"
-                                allow="autoplay"
-                                allowfullscreen
-                                style="border: none;"   
-                            ></iframe>
+                            {% if workshop.google_slides_id %}
+                                <a
+                                    href="https://docs.google.com/presentation/d/{{ workshop.google_slides_id }}/copy"
+                                    target="_blank"
+                                    class="btn btn-outline-warning"
+                                >
+                                    Make a Copy - Google Slides
+                                </a>
+                            {% endif %}
+
+                            {% if workshop.google_sheets_id %}
+                                <a
+                                    href="https://docs.google.com/spreadsheets/d/{{ workshop.google_sheets_id }}/copy"
+                                    target="_blank"
+                                    class="btn btn-outline-success"
+                                >
+                                    Make a Copy - Google Sheets
+                                </a>
+                            {% endif %}
                         </div>
+                        
+                        <!--Embedded Google Doc-->
+                        {% if workshop.google_doc_id %}
+                            <div class="ratio ratio-4x3 mb-3" style="min-height: 400px;">
+                                <iframe
+                                    src="https://docs.google.com/document/d/{{ workshop.google_doc_id }}/preview"
+                                    allow="autoplay"
+                                    allowfullscreen
+                                    style="border: none;"   
+                                ></iframe>
+                            </div>
+                        {% endif %}
+
+                        <!--Embedded Google Slides presentation-->
+                        {% if workshop.google_slides_id %}
+                            <div class="ratio ratio-4x3 mb-3" style="min-height: 400px;">
+                                <iframe
+                                    src="https://docs.google.com/presentation/d/{{ workshop.google_slides_id }}/preview"
+                                    allow="autoplay"
+                                    allowfullscreen
+                                    style="border: none;"   
+                                ></iframe>
+                            </div>
+                        {% endif %}
 
                     </div>
                 </div>

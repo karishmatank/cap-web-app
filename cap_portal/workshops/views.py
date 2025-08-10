@@ -66,19 +66,21 @@ def check_validity(request):
 
     # Google doc ID is optional as not all sessions may have an associated Google doc
     google_doc_id = request.POST["new-workshop-google-doc-id"]
+    google_slides_id = request.POST["new-workshop-google-slides-id"]
+    google_sheets_id = request.POST["new-workshop-google-sheets-id"]
 
     if (not name) or (not number) or (not description) or (not grade):
         messages.error(request, "Please enter all required information.")
         return redirect("workshops:create_workshop_material")
     
     # If all looks good, return
-    return name, number, description, grade, google_doc_id
+    return name, number, description, grade, google_doc_id, google_slides_id, google_sheets_id
 
 @login_required
 @admin_only
 def create_workshop(request):
     if request.method == 'POST':
-        name, number, description, grade, google_doc_id = check_validity(request)
+        name, number, description, grade, google_doc_id, google_slides_id, google_sheets_id = check_validity(request)
 
         # Create a new workshop if we have all the input we need
         WorkshopMaterial.objects.create(
@@ -86,7 +88,9 @@ def create_workshop(request):
             number=number,
             description=description,
             grade=grade,
-            google_doc_id=google_doc_id
+            google_doc_id=google_doc_id,
+            google_slides_id=google_slides_id,
+            google_sheets_id=google_sheets_id
         )
 
         messages.success(request, "Workshop created!")
@@ -113,7 +117,7 @@ def edit_workshop(request, id):
     workshop = WorkshopMaterial.objects.get(id=id)
 
     if request.method == 'POST':
-        name, number, description, grade, google_doc_id = check_validity(request)
+        name, number, description, grade, google_doc_id, google_slides_id, google_sheets_id = check_validity(request)
 
         # Update existing workshop
         workshop.name = name
@@ -121,6 +125,8 @@ def edit_workshop(request, id):
         workshop.description = description
         workshop.grade = grade
         workshop.google_doc_id = google_doc_id
+        workshop.google_slides_id = google_slides_id
+        workshop.google_sheets_id = google_sheets_id
 
         workshop.save()
 
