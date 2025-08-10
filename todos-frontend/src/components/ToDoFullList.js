@@ -343,7 +343,7 @@ function ToDoFullList({ currentUser }) {
                             id="select-user-dropdown" 
                             title={selectedMenteeName || "Select Mentee"} 
                             onSelect={(eventKey) => {
-                                filterMentee(parseInt(eventKey));
+                                filterMentee(eventKey);
                             }}
                             variant="primary"
                         >
