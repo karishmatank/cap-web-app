@@ -45,7 +45,7 @@ function ApplicationPlatformSurvey({ currentUser }) {
 
     const handleCheckboxChange = (event) => {
         // If a checkbox is checked, add it to a newly elected list. Remove if unchecked
-        const id = parseInt(event.target.value);
+        const id = event.target.value;
 
         if (event.target.checked) {
             setElectedIds((prev) => [...prev, id]);
