@@ -22,7 +22,7 @@
             </div>
         {% endif %}
 
-        {% if workshops.count == 0 %}
+        {% if not workshops or workshops.count == 0 %}
             <div>
                 No workshops materials available, please check back later!
             </div>
