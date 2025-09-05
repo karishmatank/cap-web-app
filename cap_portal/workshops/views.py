@@ -25,7 +25,12 @@ def index(request):
             grad_year = current_userprofile.graduation_year
         else:
             mentees = UserProfile.objects.filter(mentors=request.user)
+            if not mentees.exists():
+                return render(request, "workshops/landing.html", {
+                    "workshops": []
+                })
             grad_year = max([i.graduation_year for i in mentees])
+
         grade_cutoff_date = datetime.date(year=grad_year, month=8, day=1)
         grade_level = 11 if (grade_cutoff_date - datetime.datetime.today().date()).days > 365 else 12
         if grade_level == 11:
