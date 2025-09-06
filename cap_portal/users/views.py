@@ -34,7 +34,7 @@ class CustomPasswordResetView(PasswordResetView):
     success_url = reverse_lazy("users:login")
 
     def form_valid(self, form):
-        messages.success(self.request, "If you have a valid account, you'll receive an email with password reset instructions shortly.")
+        messages.success(self.request, "If you have a valid account, you'll receive an email from tempapexcap@gmail.com with password reset instructions shortly. Please check your spam!")
         return super().form_valid(form)
     
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
