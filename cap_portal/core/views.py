@@ -53,11 +53,21 @@ def load_from_database(request):
     if not ENABLE_LOADTEST:
         return HttpResponseForbidden()
     
+    t0 = time.perf_counter()
     # Read from a database to see how load test responds
     room = ChatRoom.objects.get(pk=8)
     messages = room.room_messages.order_by('-timestamp')
+    t1 = time.perf_counter()
+
     serializer = MessageSerializer(messages, many=True)
-    return JsonResponse({"results": serializer.data})
+    t2 = time.perf_counter()
+
+    resp = JsonResponse({"results": serializer.data})
+    resp['db-ms'] = f"{(t1 - t0)*1000:.0f}"
+    resp['serialize-ms'] = f"{(t2 - t1)*1000:.0f}"
+    resp['bytes'] = str(len(resp.content))
+
+    return resp
 
 # def vapid_public_key(request):
 #     '''Returns the VAPID public key for users to subscribe to push notifications'''
