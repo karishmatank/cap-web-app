@@ -100,6 +100,8 @@ DATABASE_URL = env("DATABASE_URL", default=None)
 if DATABASE_URL:
     cfg = env.db_url("DATABASE_URL")
     cfg['ENGINE'] = "django_cockroachdb"
+    cfg['CONN_MAX_AGE'] = 60
+    cfg['CONN_HEALTH_CHECKS'] = True
     DATABASES = {"default": cfg}
 else:
     DATABASES = {
@@ -110,6 +112,8 @@ else:
             'PASSWORD': env("DB_PASS", default=""),
             'HOST': env("DB_HOST", default=""),
             'PORT': env("DB_PORT", default=""),
+            'CONN_MAX_AGE': 60,
+            'CONN_HEALTH_CHECKS': True
         }
     }
 
