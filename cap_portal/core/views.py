@@ -6,6 +6,8 @@ from django.conf import settings
 from django.shortcuts import render
 from users.decorators import admin_only
 from cap_portal.settings import ENABLE_LOADTEST
+from chat.models import ChatRoom
+from chat.serializers import MessageSerializer
 
 _process = psutil.Process(os.getpid())
 
@@ -46,6 +48,16 @@ def load_test_list(request):
         "updated_at": int(time.time()) - i * 60
     } for i in range(50)]
     return JsonResponse({"results": items})
+
+def load_from_database(request):
+    if not ENABLE_LOADTEST:
+        return HttpResponseForbidden()
+    
+    # Read from a database to see how load test responds
+    room = ChatRoom.objects.get(pk=8)
+    messages = room.room_messages.order_by('-timestamp')
+    serializer = MessageSerializer(messages, many=True)
+    return JsonResponse({"results": serializer.data})
 
 # def vapid_public_key(request):
 #     '''Returns the VAPID public key for users to subscribe to push notifications'''

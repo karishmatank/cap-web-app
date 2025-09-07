@@ -14,7 +14,8 @@ export const options = {
 };
 
 export default function() {
-    const res = http.get('https://apex-cap.onrender.com/core/loadtest/test-list/');
+    // const res = http.get('https://apex-cap.onrender.com/core/loadtest/test-list/');
+    const res = http.get('https://apex-cap.onrender.com/core/loadtest/test-database-call/');
     check(res, { 'status was 200': (r) => r.status === 200 });
     sleep(1);
 }
