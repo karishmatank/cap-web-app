@@ -1,10 +1,11 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 import json
 import os, time, psutil
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.shortcuts import render
 from users.decorators import admin_only
+from cap_portal.settings import ENABLE_LOADTEST
 
 _process = psutil.Process(os.getpid())
 
@@ -33,6 +34,18 @@ def resources(request):
         "pid": _process.pid,
     })
 
+def load_test_list(request):
+    if not ENABLE_LOADTEST:
+        return HttpResponseForbidden()
+    
+    # 50 rows of fake data for load testing purposes
+    items = [{
+        "id": i,
+        "title": f"Item {i}",
+        "preview": "lorem ipsum dolor sit amet" * 5,
+        "updated_at": int(time.time()) - i * 60
+    } for i in range(50)]
+    return JsonResponse({"results": items})
 
 # def vapid_public_key(request):
 #     '''Returns the VAPID public key for users to subscribe to push notifications'''

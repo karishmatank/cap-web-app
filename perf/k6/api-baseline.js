@@ -14,7 +14,7 @@ export const options = {
 };
 
 export default function() {
-    const res = http.get('https://apex-cap.onrender.com/chat/api/chats/');  /* TODO - Replace endpoint */
+    const res = http.get('https://apex-cap.onrender.com/core/loadtest/test-list/');
     check(res, { 'status was 200': (r) => r.status === 200 });
     sleep(1);
 }
