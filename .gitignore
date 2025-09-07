@@ -11,3 +11,7 @@
 *.log
 .DS_Store
 .vscode/
+
+# Load testing related
+perf/results/*
+perf/*.env

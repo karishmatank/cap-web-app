@@ -1,8 +1,12 @@
 from django.http import JsonResponse
 import json
-import os
+import os, time, psutil
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.shortcuts import render
+from users.decorators import admin_only
+
+_process = psutil.Process(os.getpid())
 
 # Create your views here.
 def nav_links_api(request):
@@ -10,6 +14,25 @@ def nav_links_api(request):
     with open(json_path) as f:
         data = json.load(f)
     return JsonResponse(data, safe=False)
+
+@login_required
+def resources(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'access': 'denied'})
+    
+    # 100ms sampling for a "what's happening right now" CPU snapshot
+    cpu_pct = _process.cpu_percent(interval=0.1)
+    mem = _process.memory_info()
+    rss_mb = mem.rss / (1024*1024)  # resident set size (real memory)
+    return JsonResponse({
+        "ts": int(time.time()),
+        "cpu_percent": round(cpu_pct, 1),
+        "rss_mb": round(rss_mb, 1),
+        "limit_mb": 512,  # Free plan memory limit
+        "rss_pct_of_limit": round(100 * rss_mb / 512, 1),
+        "pid": _process.pid,
+    })
+
 
 # def vapid_public_key(request):
 #     '''Returns the VAPID public key for users to subscribe to push notifications'''
