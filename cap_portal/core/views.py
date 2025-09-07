@@ -63,8 +63,8 @@ def load_from_database(request):
     t2 = time.perf_counter()
 
     resp = JsonResponse({"results": serializer.data})
-    resp['db-ms'] = f"{(t1 - t0)*1000:.0f}"
-    resp['serialize-ms'] = f"{(t2 - t1)*1000:.0f}"
+    resp['db-ms'] = f"{(t1 - t0)*1000:.0f}"  # How long does the db portion take?
+    resp['serialize-ms'] = f"{(t2 - t1)*1000:.0f}"  # How long does the serialization take?
     resp['bytes'] = str(len(resp.content))
 
     return resp
