@@ -19,6 +19,8 @@ from rest_framework.response import Response
 
 from datetime import datetime
 
+from cap_portal.settings import EXCLUDE_TEST_USERS_BY_DEFAULT, TEST_USER_IDS
+
 # Create your views here.
 class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
     success_url = reverse_lazy("users:index")
@@ -116,7 +118,10 @@ def create_user(request, role):
     if role == "mentee":
         # Get a list of possible mentors
         # The assumption is that mentors are already input into the system by the time mentees start signing up
-        mentors = UserProfile.objects.filter(role="mentor")
+        if EXCLUDE_TEST_USERS_BY_DEFAULT:
+            mentors = UserProfile.objects.filter(role="mentor").exclude(user__pk__in=TEST_USER_IDS)
+        else:
+            mentors = UserProfile.objects.filter(role="mentor")
 
         return render(request, "users/create_user.html", {
             "mentors": mentors,
@@ -201,10 +206,16 @@ def get_current_user(request):
 @permission_classes([IsAuthenticated])
 def search_users_by_name(request):
     query = request.GET.get("q", "")
-    users = User.objects.filter(
-        Q(first_name__icontains=query) |
-        Q(last_name__icontains=query)
-    )[:10]
+    if EXCLUDE_TEST_USERS_BY_DEFAULT:
+        users = User.objects.exclude(pk__in=TEST_USER_IDS).filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        )[:10]
+    else:
+        users = User.objects.filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        )[:10]
 
     data = [
         {
@@ -232,7 +243,10 @@ class CommunityDirectoryListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        queryset = UserProfile.objects.all()
+        if EXCLUDE_TEST_USERS_BY_DEFAULT:
+            queryset = UserProfile.objects.all().exclude(user__pk__in=TEST_USER_IDS)
+        else:
+            queryset = UserProfile.objects.all()
 
         # Queries based on keyword (name, interest, etc)
         query = self.request.GET.get('q')

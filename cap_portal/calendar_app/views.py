@@ -15,6 +15,7 @@ from users.models import UserProfile
 from datetime import datetime
 from cap_portal.notifications import push_to_users, schedule_event_reminder, delete_event_reminder
 import logging
+from cap_portal.settings import EXCLUDE_TEST_USERS_BY_DEFAULT, TEST_USER_IDS
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +24,15 @@ def unpack_participants(submitted_participants):
     unpacked_participants = set()
 
     grad_year_11 = int(datetime.now().year) + 2 if datetime.now().month >= 8 else int(datetime.now().year) + 1
-    mentees_11 = User.objects.filter(profile__role='mentee', profile__graduation_year=grad_year_11)
-    mentors_11 = User.objects.filter(mentees__user__in=mentees_11)
+    mentees_11 = User.objects.filter(profile__role='mentee', profile__graduation_year=grad_year_11).exclude(pk__in=TEST_USER_IDS)
+    mentors_11 = User.objects.filter(mentees__user__in=mentees_11).exclude(pk__in=TEST_USER_IDS)
     grad_year_12 = int(datetime.now().year) + 1 if datetime.now().month >= 8 else int(datetime.now().year)
-    mentees_12 = User.objects.filter(profile__role='mentee', profile__graduation_year=grad_year_12)
-    mentors_12 = User.objects.filter(mentees__user__in=mentees_12)
+    mentees_12 = User.objects.filter(profile__role='mentee', profile__graduation_year=grad_year_12).exclude(pk__in=TEST_USER_IDS)
+    mentors_12 = User.objects.filter(mentees__user__in=mentees_12).exclude(pk__in=TEST_USER_IDS)
 
     for participant in submitted_participants:
         if participant == -1:
-            unpacked_participants.update(User.objects.all())
+            unpacked_participants.update(User.objects.all().exclude(pk__in=TEST_USER_IDS))
         elif participant == -2:
             unpacked_participants.update(mentees_11)
         elif participant == -4:
