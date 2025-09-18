@@ -87,23 +87,31 @@ def create_user(request, role):
         # Check if both password entries match
         if request.POST["password"] != request.POST["password_reentry"]:
             return render(request, "users/create_user.html", {
+                "role": role,
                 "message": f"Passwords do not match."
             })
         
-        # Error check graduation year
-        try:
-            graduation_year = int(request.POST['graduation_year'])
-        except ValueError:
-            return render(request, "users/create_user.html", {
-                "message": f"Please enter an integer."
-            })
-        
-        # Check that graduation year provided isn't nonsensical
-        current_year = datetime.now().year
-        if graduation_year > (current_year + 2):
-            return render(request, "users/create_user.html", {
-                "message": f"Please enter a valid graduation year."
-            })
+        if role == 'mentee':
+            mentors = UserProfile.objects.filter(role="mentor").exclude(user__pk__in=TEST_USER_IDS)
+
+            # Error check graduation year
+            try:
+                graduation_year = int(request.POST['graduation_year'])
+            except ValueError:
+                return render(request, "users/create_user.html", {
+                    "role": role,
+                    "mentors": mentors,
+                    "message": f"Please enter an integer."
+                })
+            
+            # Check that graduation year provided isn't nonsensical
+            current_year = datetime.now().year
+            if graduation_year > (current_year + 2):
+                return render(request, "users/create_user.html", {
+                    "role": role,
+                    "mentors": mentors,
+                    "message": f"Please enter a valid graduation year."
+                })
                 
         # If everything looks good, create a new user
         new_user = User.objects.create_user(
@@ -117,14 +125,14 @@ def create_user(request, role):
         # Create a user profile
         new_profile = UserProfile.objects.create(
             user=new_user,
-            role=role,
-            graduation_year=graduation_year
+            role=role
         )
 
         if role == 'mentee':
             mentor_id = request.POST["mentor"]
             mentor = User.objects.get(id=mentor_id)
             new_profile.mentors.add(mentor)
+            new_profile.graduation_year = graduation_year
 
         messages.success(request, "Account created, please log in!")
         
