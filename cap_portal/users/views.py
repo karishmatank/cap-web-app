@@ -86,9 +86,14 @@ def create_user(request, role):
         
         # Check if both password entries match
         if request.POST["password"] != request.POST["password_reentry"]:
+            if role == 'mentee':
+                return render(request, "users/create_user.html", {
+                    "role": role,
+                    "mentors": UserProfile.objects.filter(role="mentor").exclude(user__pk__in=TEST_USER_IDS),
+                    "message": f"Passwords do not match."
+                })
             return render(request, "users/create_user.html", {
                 "role": role,
-                "mentors": UserProfile.objects.filter(role="mentor").exclude(user__pk__in=TEST_USER_IDS),
                 "message": f"Passwords do not match."
             })
         
