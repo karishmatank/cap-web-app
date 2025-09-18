@@ -65,6 +65,18 @@
             {% if mentors %}
                 <hr>
                 <div class="form-floating">
+                    <input 
+                        class="form-control"
+                        id="graduation_year" 
+                        autocomplete="off"  
+                        type="number" 
+                        name="graduation_year"
+                        value="{{ profile.graduation_year }}" 
+                        required
+                    >
+                    <label for="graduation_year">Graduation Year</label>
+                </div>
+                <div class="form-floating">
                     <select class="form-select" name="mentor" id="mentor_name" required>
                         <option value="" disabled selected>Select Your Mentor</option>
                         {% for mentor in mentors %}
