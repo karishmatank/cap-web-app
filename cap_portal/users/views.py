@@ -88,6 +88,7 @@ def create_user(request, role):
         if request.POST["password"] != request.POST["password_reentry"]:
             return render(request, "users/create_user.html", {
                 "role": role,
+                "mentors": UserProfile.objects.filter(role="mentor").exclude(user__pk__in=TEST_USER_IDS),
                 "message": f"Passwords do not match."
             })
         
@@ -132,7 +133,8 @@ def create_user(request, role):
             mentor_id = request.POST["mentor"]
             mentor = User.objects.get(id=mentor_id)
             new_profile.mentors.add(mentor)
-            new_profile.graduation_year = graduation_year
+            new_profile.graduation_year = request.POST["graduation_year"]
+            new_profile.save()
 
         messages.success(request, "Account created, please log in!")
         
