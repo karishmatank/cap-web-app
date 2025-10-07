@@ -69,7 +69,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "message": {
                         "id": msg.id,
                         "user": {
-                            "id": self.scope["user"].id,
+                            "id": str(self.scope["user"].id),
                             "first_name": self.scope["user"].first_name,
                             "last_name": self.scope["user"].last_name
                         },
@@ -85,7 +85,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 self.room_group_name,
                 {
                     "type": "user_typing",
-                    "user_id": self.scope["user"].id,
+                    "user_id": str(self.scope["user"].id),
                     "first_name": self.scope["user"].first_name,
                     "last_name": self.scope["user"].last_name,
                 }
